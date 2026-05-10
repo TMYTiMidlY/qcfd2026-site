@@ -86,19 +86,18 @@ export function VenueMap() {
                 <Building className="size-3.5" />
                 打开地图导航
               </p>
-              <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="mt-3 flex flex-wrap gap-2.5">
                 {mapLinks.map((m) => (
                   <Button
                     key={m.key}
                     asChild
-                    size="lg"
+                    size="default"
                     variant={m.primary ? 'default' : 'outline'}
-                    className="justify-start"
                   >
                     <a href={m.href} target="_blank" rel="noreferrer">
                       <Navigation className="size-4" />
                       在{m.label}中打开
-                      <ExternalLink className="ml-auto size-4 opacity-60" />
+                      <ExternalLink className="size-3.5 opacity-60" />
                     </a>
                   </Button>
                 ))}

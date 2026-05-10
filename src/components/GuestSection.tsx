@@ -2,6 +2,30 @@ import { Award, Building2 } from 'lucide-react'
 import { guests } from '@/data/speakers'
 import { InitialAvatar } from '@/components/SpeakerCard'
 
+function GuestAvatar({
+  src,
+  name,
+  size = 64,
+}: {
+  src?: string
+  name: string
+  size?: number
+}) {
+  if (!src) {
+    return <InitialAvatar name={name} size={size} accent="secondary" />
+  }
+  return (
+    <img
+      src={src}
+      alt={`${name} 的照片`}
+      loading="lazy"
+      decoding="async"
+      className="shrink-0 rounded-full object-cover object-top ring-1 ring-black/5"
+      style={{ width: size, height: size }}
+    />
+  )
+}
+
 export function GuestSection() {
   return (
     <section id="guests" className="section-pad">
@@ -30,7 +54,7 @@ export function GuestSection() {
                 aria-hidden
               />
               <div className="flex items-center gap-4">
-                <InitialAvatar name={g.name} size={64} accent="secondary" />
+                <GuestAvatar src={g.photo} name={g.name} size={64} />
                 <div>
                   <h3 className="text-xl font-semibold text-fg">{g.name}</h3>
                   <p className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-secondary">
@@ -44,7 +68,7 @@ export function GuestSection() {
                 {g.affiliation}
               </p>
               {g.bio ? (
-                <p className="mt-5 line-clamp-5 text-sm leading-relaxed text-fg-soft/90">
+                <p className="mt-5 line-clamp-7 text-sm leading-relaxed text-fg-soft/90">
                   {g.bio}
                 </p>
               ) : null}
