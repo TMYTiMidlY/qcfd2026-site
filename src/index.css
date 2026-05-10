@@ -103,11 +103,11 @@
 }
 
 @utility section-pad {
-  padding-block: clamp(4rem, 8vw, 7rem);
+  padding-block: clamp(3rem, 8vw, 7rem);
 }
 
 @utility container-page {
-  width: min(100% - 2.5rem, 1180px);
+  width: min(100% - clamp(2rem, 5vw, 2.5rem), 1180px);
   margin-inline: auto;
 }
 

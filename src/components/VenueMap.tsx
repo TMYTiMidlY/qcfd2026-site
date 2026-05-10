@@ -1,13 +1,34 @@
-import { MapPin, Navigation, Building, ExternalLink, QrCode } from 'lucide-react'
+import { MapPin, Navigation, Building, ExternalLink, Map as MapIcon } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
 
-export function VenueMap() {
-  const query = encodeURIComponent('合肥翡翠湖迎宾馆')
-  const amapJump = `https://uri.amap.com/search?keyword=${query}&src=qcfd2026&callnative=1`
-  const baiduJump = `https://map.baidu.com/search/${query}`
-  const tencentJump = `https://apis.map.qq.com/tools/poimarker?keyword=${query}&referer=qcfd2026`
+const VENUE_NAME = '合肥翡翠湖迎宾馆'
 
+const mapLinks = [
+  {
+    key: 'amap',
+    label: '高德地图',
+    href: `https://uri.amap.com/search?keyword=${encodeURIComponent(VENUE_NAME)}&src=qcfd2026&callnative=1`,
+    primary: true,
+  },
+  {
+    key: 'baidu',
+    label: '百度地图',
+    href: `https://map.baidu.com/search/${encodeURIComponent(VENUE_NAME)}`,
+  },
+  {
+    key: 'tencent',
+    label: '腾讯地图',
+    href: `https://map.qq.com/#search?keyword=${encodeURIComponent(VENUE_NAME)}`,
+  },
+  {
+    key: 'apple',
+    label: '苹果地图',
+    href: `https://maps.apple.com/?q=${encodeURIComponent(VENUE_NAME)}`,
+  },
+]
+
+export function VenueMap() {
   return (
     <section id="venue" className="section-pad">
       <div className="container-page">
@@ -21,9 +42,9 @@ export function VenueMap() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_1fr]">
+        <div className="mt-10 grid gap-5 lg:grid-cols-[1.1fr_1fr] lg:gap-6">
           {/* 左侧：场地速览大卡 */}
-          <div className="card-surface relative flex flex-col justify-between overflow-hidden p-8">
+          <div className="card-surface relative flex flex-col justify-between overflow-hidden p-5 sm:p-7 lg:p-8">
             <div
               className="pointer-events-none absolute inset-0 opacity-60"
               style={{
@@ -37,9 +58,11 @@ export function VenueMap() {
                 <MapPin className="size-3.5" />
                 Conference Venue
               </span>
-              <h3 className="mt-4 text-2xl font-bold text-fg md:text-3xl">
+              <h3 className="mt-4 text-2xl font-bold text-fg sm:text-3xl">
                 合肥翡翠湖迎宾馆
-                <span className="ml-2 text-base font-medium text-primary">3 号楼</span>
+                <span className="ml-2 inline-block text-base font-medium text-primary">
+                  3 号楼
+                </span>
               </h3>
               <p className="mt-3 inline-flex items-start gap-2 text-sm text-fg-soft">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-fg-muted" />
@@ -47,14 +70,16 @@ export function VenueMap() {
               </p>
             </div>
 
-            <div className="relative mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="relative mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3">
               <div className="rounded-xl border border-black/5 bg-white/70 p-4 backdrop-blur">
                 <p className="text-xs text-fg-muted">区位</p>
                 <p className="mt-1 text-sm font-medium text-fg">蜀山区翡翠湖畔</p>
               </div>
               <div className="rounded-xl border border-black/5 bg-white/70 p-4 backdrop-blur">
                 <p className="text-xs text-fg-muted">最近地铁</p>
-                <p className="mt-1 text-sm font-medium text-fg">3 号线工大翡翠湖校区</p>
+                <p className="mt-1 text-sm font-medium text-fg">
+                  3 号线 · 工大翡翠湖校区
+                </p>
               </div>
               <div className="rounded-xl border border-black/5 bg-white/70 p-4 backdrop-blur">
                 <p className="text-xs text-fg-muted">会期</p>
@@ -63,16 +88,15 @@ export function VenueMap() {
             </div>
 
             <p className="relative mt-6 inline-flex items-start gap-2 rounded-xl border border-primary/15 bg-white/60 p-4 text-xs leading-relaxed text-fg-muted backdrop-blur">
-              <QrCode className="mt-0.5 size-4 shrink-0 text-primary" />
+              <MapIcon className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>
-                直接在右侧选择常用地图 App 打开实景地图与路线规划。
-                建议在手机端使用导航 App 获取实时路况。
+                选择您常用的地图 App 打开实景地图。手机端可直接调起 App 进入路线规划。
               </span>
             </p>
           </div>
 
-          {/* 右侧：导航跳转 */}
-          <div className="card-surface flex flex-col gap-5 p-7">
+          {/* 右侧：四大地图 App 跳转 */}
+          <div className="card-surface flex flex-col gap-5 p-5 sm:p-7">
             <div>
               <p className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
                 <Building className="size-3.5" />
@@ -82,36 +106,30 @@ export function VenueMap() {
                 选择常用地图 App
               </h3>
               <p className="mt-2 text-sm text-fg-soft">
-                选择您常用的地图平台，前往实景地图查看与路线规划。
+                覆盖中国大陆三大主流（高德 / 百度 / 腾讯）以及 iOS 用户常用的苹果地图。
               </p>
             </div>
 
-            <div className="grid gap-3">
-              <Button asChild size="lg" className="justify-start">
-                <a href={amapJump} target="_blank" rel="noreferrer">
-                  <Navigation className="size-4" />
-                  在高德地图中打开
-                  <ExternalLink className="ml-auto size-4 opacity-60" />
-                </a>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="justify-start">
-                <a href={baiduJump} target="_blank" rel="noreferrer">
-                  <Navigation className="size-4" />
-                  在百度地图中打开
-                  <ExternalLink className="ml-auto size-4 opacity-60" />
-                </a>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="justify-start">
-                <a href={tencentJump} target="_blank" rel="noreferrer">
-                  <Navigation className="size-4" />
-                  在腾讯地图中打开
-                  <ExternalLink className="ml-auto size-4 opacity-60" />
-                </a>
-              </Button>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              {mapLinks.map((m) => (
+                <Button
+                  key={m.key}
+                  asChild
+                  size="lg"
+                  variant={m.primary ? 'default' : 'outline'}
+                  className="justify-start"
+                >
+                  <a href={m.href} target="_blank" rel="noreferrer">
+                    <Navigation className="size-4" />
+                    在{m.label}中打开
+                    <ExternalLink className="ml-auto size-4 opacity-60" />
+                  </a>
+                </Button>
+              ))}
             </div>
 
             <p className="mt-auto rounded-xl border border-black/5 bg-bg-alt/60 p-4 text-xs leading-relaxed text-fg-muted">
-              ⓘ 三大地图平台均不支持无 API Key 的免费 iframe 嵌入；本页改为「关键字搜索」型跳转，由地图 App 自行定位，确保无需登录、无水印、无横纵滚动条。
+              ⓘ 三大中国地图平台均不支持无 API Key 的免费 iframe 嵌入；本页改为「关键字搜索」型跳转，由地图 App 自行定位，确保无需登录、无水印、无横纵滚动条。
             </p>
           </div>
         </div>

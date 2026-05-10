@@ -15,7 +15,7 @@ export function NewsList() {
           </p>
         </div>
 
-        <div className="mt-10 grid gap-5 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {news.map((item) => (
             <a
               key={item.id}

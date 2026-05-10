@@ -41,7 +41,7 @@ export function Schedule() {
         </div>
 
         <div className="mt-6 card-surface overflow-hidden">
-          <div className="flex flex-col gap-1 border-b border-black/5 px-7 py-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-1 border-b border-black/5 px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
             <div>
               <h3 className="text-2xl font-semibold text-fg">{day.label}</h3>
               <p className="mt-1 text-sm text-fg-muted">
@@ -57,7 +57,7 @@ export function Schedule() {
             {day.items.map((item, idx) => (
               <li
                 key={idx}
-                className="flex flex-col gap-3 px-7 py-5 sm:flex-row sm:items-start"
+                className="flex flex-col gap-3 px-5 py-5 sm:flex-row sm:items-start sm:px-7"
               >
                 <span className="inline-flex w-32 shrink-0 items-center gap-2 text-sm font-medium text-primary">
                   <Clock className="size-3.5" />

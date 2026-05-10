@@ -98,7 +98,7 @@ export function Hero() {
             </Button>
           </div>
 
-          <div className="mt-10 inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur">
+          <div className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur">
             {isPast ? (
               <span className="text-sm text-fg">会议正在进行，欢迎现场交流</span>
             ) : (
