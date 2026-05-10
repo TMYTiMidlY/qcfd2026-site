@@ -44,7 +44,7 @@ export function GuestSection() {
                 {g.affiliation}
               </p>
               {g.bio ? (
-                <p className="mt-5 line-clamp-4 text-sm leading-relaxed text-fg-soft/90">
+                <p className="mt-5 line-clamp-5 text-sm leading-relaxed text-fg-soft/90">
                   {g.bio}
                 </p>
               ) : null}
