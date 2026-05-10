@@ -16,8 +16,12 @@ function useCountdown(target: string) {
   return { days, hours, isPast: diff === 0 }
 }
 
+// 倒计时锚定 5/23 09:00 学术会议开场（docx 仅写「5月23日，学术会议」未明时段，09:00 为
+// 学术会议常见默认开场时间，详见 SOURCES.md §1）
+const COUNTDOWN_TARGET = '2026-05-23T09:00:00+08:00'
+
 export function Hero() {
-  const { days, hours, isPast } = useCountdown(conference.startDate)
+  const { days, hours, isPast } = useCountdown(COUNTDOWN_TARGET)
 
   return (
     <section
@@ -47,6 +51,9 @@ export function Hero() {
               量子计算前沿研讨会
             </span>
           </h1>
+          <p className="mt-4 text-xs font-medium uppercase tracking-[0.18em] text-primary/80 md:text-sm">
+            The 3rd QCFD · Quantum Computing for Fluid Dynamics
+          </p>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
             {conference.tagline}
@@ -82,7 +89,7 @@ export function Hero() {
               asChild
               variant="outline"
               size="lg"
-              className="rounded-full border-white/15 bg-white/5 backdrop-blur hover:bg-white/10 hover:text-fg"
+              className="rounded-full bg-white/70 backdrop-blur hover:bg-white"
             >
               <a href="#schedule">
                 查看日程
@@ -91,13 +98,13 @@ export function Hero() {
             </Button>
           </div>
 
-          <div className="mt-10 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur">
+          <div className="mt-10 inline-flex items-center gap-3 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur">
             {isPast ? (
-              <span className="text-sm text-fg">会议已开幕，欢迎现场交流</span>
+              <span className="text-sm text-fg">会议正在进行，欢迎现场交流</span>
             ) : (
               <>
                 <span className="text-xs uppercase tracking-[0.18em] text-fg-muted">
-                  距开幕还有
+                  距会议开始
                 </span>
                 <span className="text-2xl font-bold text-primary tabular-nums">
                   {days}

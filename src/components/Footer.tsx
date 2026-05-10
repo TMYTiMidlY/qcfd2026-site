@@ -3,11 +3,11 @@ import { conference } from '@/data/conference'
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-bg-soft pt-16 pb-10">
+    <footer className="border-t border-black/5 bg-bg-alt pt-16 pb-10">
       <div className="container-page">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-ink font-bold">
+            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-white font-bold">
               Q
             </span>
             <h3 className="mt-4 text-lg font-semibold text-fg">
@@ -89,7 +89,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-2 border-t border-white/5 pt-6 text-xs text-fg-muted sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-2 border-t border-black/5 pt-6 text-xs text-fg-muted sm:flex-row sm:items-center sm:justify-between">
           <p>
             © {new Date().getFullYear()} {conference.name} · 保留所有权利
           </p>

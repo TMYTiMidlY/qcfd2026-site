@@ -28,8 +28,8 @@ export function Schedule() {
               className={cn(
                 'rounded-full border px-5 py-2.5 text-sm font-medium transition',
                 idx === active
-                  ? 'border-primary bg-primary text-ink shadow-lg shadow-primary/20'
-                  : 'border-white/10 bg-white/5 text-fg-soft hover:border-primary/40 hover:text-fg',
+                  ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
+                  : 'border-black/10 bg-white text-fg-soft hover:border-primary/40 hover:text-primary',
               )}
             >
               <span className="inline-flex items-center gap-2">
@@ -41,7 +41,7 @@ export function Schedule() {
         </div>
 
         <div className="mt-6 card-surface overflow-hidden">
-          <div className="flex flex-col gap-1 border-b border-white/10 px-7 py-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-1 border-b border-black/5 px-7 py-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-2xl font-semibold text-fg">{day.label}</h3>
               <p className="mt-1 text-sm text-fg-muted">
@@ -53,7 +53,7 @@ export function Schedule() {
             </span>
           </div>
 
-          <ol className="divide-y divide-white/5">
+          <ol className="divide-y divide-black/5">
             {day.items.map((item, idx) => (
               <li
                 key={idx}

@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 
 export function VenueMap() {
   const query = encodeURIComponent('合肥翡翠湖迎宾馆')
-  const amapEmbed = `https://uri.amap.com/marker?position=117.205,31.823&name=合肥翡翠湖迎宾馆&callnative=0`
-  const amapJump = `https://uri.amap.com/marker?position=117.205,31.823&name=合肥翡翠湖迎宾馆&src=qcfd2026&coordinate=gaode&callnative=1`
+  const amapEmbed = `https://uri.amap.com/marker?keywords=${query}&name=合肥翡翠湖迎宾馆&callnative=0`
+  const amapJump = `https://uri.amap.com/search?keyword=${query}&src=qcfd2026&callnative=1`
   const baiduJump = `https://map.baidu.com/search/${query}`
 
   return (
@@ -48,11 +48,11 @@ export function VenueMap() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="rounded-xl border border-black/5 bg-bg-alt/70 p-4">
                 <p className="text-xs text-fg-muted">主会场</p>
                 <p className="mt-1 text-sm font-medium text-fg">3 号楼会议厅</p>
               </div>
-              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-4">
+              <div className="rounded-xl border border-black/5 bg-bg-alt/70 p-4">
                 <p className="text-xs text-fg-muted">会期</p>
                 <p className="mt-1 text-sm font-medium text-fg">
                   {conference.dates}
@@ -71,7 +71,6 @@ export function VenueMap() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="border-white/15 bg-white/5 hover:bg-white/10 hover:text-fg"
               >
                 <a href={baiduJump} target="_blank" rel="noreferrer">
                   百度地图查看
@@ -79,9 +78,8 @@ export function VenueMap() {
               </Button>
             </div>
 
-            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-xs leading-relaxed text-fg-muted">
-              ⓘ 经纬度为大致位置（117.205, 31.823），如需精确导航请以地图 App
-              中的实时定位为准。
+            <div className="rounded-xl border border-black/5 bg-bg-alt/60 p-4 text-xs leading-relaxed text-fg-muted">
+              ⓘ 地图链接走「关键字搜索」，由地图 App 自行定位；如需精确导航请以 App 内实时定位为准。
             </div>
           </div>
         </div>

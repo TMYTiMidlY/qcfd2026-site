@@ -8,7 +8,7 @@ const navLinks = [
   { href: '#home', label: '首页' },
   { href: '#guests', label: '特邀嘉宾' },
   { href: '#topics', label: '议题方向' },
-  { href: '#speakers', label: '报告专家' },
+  { href: '#speakers', label: '特邀报告' },
   { href: '#schedule', label: '日程' },
   { href: '#venue', label: '会议地点' },
   { href: '#traffic', label: '交通指南' },
@@ -31,13 +31,13 @@ export function Header() {
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-300',
         scrolled
-          ? 'border-b border-white/10 bg-bg/85 backdrop-blur-xl'
+          ? 'border-b border-black/5 bg-white/85 backdrop-blur-xl shadow-sm'
           : 'border-b border-transparent bg-transparent',
       )}
     >
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <a href="#home" className="flex items-center gap-2.5 group">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-ink font-bold shadow-lg shadow-primary/20 transition group-hover:shadow-primary/40">
+          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-white font-bold shadow-lg shadow-primary/25 transition group-hover:shadow-primary/40">
             Q
           </span>
           <span className="leading-tight">
@@ -55,7 +55,7 @@ export function Header() {
             <a
               key={link.href}
               href={link.href}
-              className="rounded-full px-3 py-2 text-sm text-fg-soft transition hover:bg-white/5 hover:text-fg"
+              className="rounded-full px-3 py-2 text-sm text-fg-soft transition hover:bg-primary/10 hover:text-primary"
             >
               {link.label}
             </a>
@@ -73,7 +73,7 @@ export function Header() {
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-label="菜单"
-            className="grid size-10 place-items-center rounded-full text-fg lg:hidden hover:bg-white/5"
+            className="grid size-10 place-items-center rounded-full text-fg lg:hidden hover:bg-primary/10"
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -81,14 +81,14 @@ export function Header() {
       </div>
 
       {open ? (
-        <div className="lg:hidden border-t border-white/10 bg-bg/95 backdrop-blur-xl">
+        <div className="lg:hidden border-t border-black/5 bg-white/95 backdrop-blur-xl">
           <nav className="container-page flex flex-col gap-1 py-4">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm text-fg-soft hover:bg-white/5 hover:text-fg"
+                className="rounded-lg px-3 py-2.5 text-sm text-fg-soft hover:bg-primary/10 hover:text-primary"
               >
                 {link.label}
               </a>

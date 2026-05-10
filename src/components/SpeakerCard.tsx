@@ -12,29 +12,72 @@ import {
 } from '@/components/ui/dialog'
 
 const accentClasses = {
-  primary: 'from-primary/40 to-accent/40 text-primary',
-  secondary: 'from-secondary/40 to-primary/40 text-secondary',
+  primary: 'from-primary/20 to-accent/20 text-primary',
+  secondary: 'from-secondary/20 to-primary/20 text-secondary',
 } as const
 
-type AvatarProps = {
+type InitialAvatarProps = {
   name: string
   size?: number
   accent?: 'primary' | 'secondary'
+  className?: string
 }
 
-export function Avatar({ name, size = 56, accent = 'primary' }: AvatarProps) {
+export function InitialAvatar({
+  name,
+  size = 56,
+  accent = 'primary',
+  className,
+}: InitialAvatarProps) {
   const initial = name.trim().charAt(0)
   return (
     <span
       className={cn(
-        'grid shrink-0 place-items-center rounded-full bg-gradient-to-br font-semibold text-fg ring-1 ring-white/10',
+        'grid shrink-0 place-items-center rounded-full bg-gradient-to-br font-semibold ring-1 ring-black/5',
         accentClasses[accent],
+        className,
       )}
       style={{ width: size, height: size, fontSize: size * 0.42 }}
       aria-hidden
     >
       {initial}
     </span>
+  )
+}
+
+type PhotoProps = {
+  src?: string
+  name: string
+  className?: string
+}
+
+function Photo({ src, name, className }: PhotoProps) {
+  if (!src) {
+    return (
+      <div
+        className={cn(
+          'grid h-full w-full place-items-center bg-gradient-to-br from-primary/10 to-secondary/15 text-primary',
+          className,
+        )}
+        aria-hidden
+      >
+        <span className="text-5xl font-semibold">
+          {name.trim().charAt(0)}
+        </span>
+      </div>
+    )
+  }
+  return (
+    <img
+      src={src}
+      alt={`${name} 的照片`}
+      loading="lazy"
+      decoding="async"
+      className={cn(
+        'h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.04]',
+        className,
+      )}
+    />
   )
 }
 
@@ -49,27 +92,31 @@ export function SpeakerCard({
     <button
       type="button"
       onClick={onOpen}
-      className="group card-surface flex h-full flex-col p-6 text-left transition hover:-translate-y-1 hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none"
+      className="group card-surface flex h-full flex-col overflow-hidden text-left transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(3,105,161,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
     >
-      <div className="flex items-start gap-4">
-        <Avatar name={speaker.name} size={56} />
-        <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-semibold text-fg">{speaker.name}</h3>
-          <p className="mt-1 text-xs text-primary">{speaker.title}</p>
-          <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-fg-muted">
-            <Building2 className="size-3" />
-            {speaker.affiliation}
-          </p>
-        </div>
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-bg-alt">
+        <Photo src={speaker.photo} name={speaker.name} />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/15 to-transparent"
+          aria-hidden
+        />
       </div>
-      {speaker.topic ? (
-        <p className="mt-5 line-clamp-3 text-sm font-medium leading-relaxed text-fg-soft group-hover:text-fg">
-          {speaker.topic}
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="text-lg font-semibold text-fg">{speaker.name}</h3>
+        <p className="mt-1 text-xs font-medium text-primary">{speaker.title}</p>
+        <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-fg-muted">
+          <Building2 className="mt-0.5 size-3 shrink-0" />
+          <span>{speaker.affiliation}</span>
         </p>
-      ) : null}
-      <span className="mt-auto pt-5 text-xs font-medium text-primary opacity-80 transition group-hover:opacity-100">
-        查看简介与摘要 →
-      </span>
+        {speaker.topic ? (
+          <p className="mt-4 line-clamp-2 text-sm leading-relaxed text-fg-soft">
+            {speaker.topic}
+          </p>
+        ) : null}
+        <span className="mt-auto pt-4 text-xs font-medium text-primary opacity-70 transition group-hover:opacity-100">
+          查看简介与摘要 →
+        </span>
+      </div>
     </button>
   )
 }
@@ -82,18 +129,18 @@ export function SpeakerGrid() {
       <div className="container-page">
         <div className="flex flex-col items-start gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <span className="eyebrow">报告专家</span>
+            <span className="eyebrow-en">Distinguished Speakers</span>
             <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-              报告人阵容
+              特邀报告讲者
             </h2>
             <p className="mt-3 max-w-2xl text-fg-soft">
-              {speakers.length} 位来自高校、科研院所与产业界的专家，分享流体力学量子计算的前沿算法、硬件实现与产业化进展。
+              {speakers.length} 位来自高校、科研院所与产业界的专家学者，分享流体力学量子计算的前沿算法、硬件实现与产业化进展。
             </p>
           </div>
           <span className="text-xs text-fg-muted">报告人持续更新中</span>
         </div>
 
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {speakers.map((s) => (
             <SpeakerCard
               key={s.id}
@@ -110,7 +157,15 @@ export function SpeakerGrid() {
             <>
               <DialogHeader>
                 <div className="flex items-start gap-4 pr-8">
-                  <Avatar name={active.name} size={64} />
+                  {active.photo ? (
+                    <img
+                      src={active.photo}
+                      alt={`${active.name} 的照片`}
+                      className="size-20 shrink-0 rounded-2xl object-cover object-top ring-1 ring-black/5"
+                    />
+                  ) : (
+                    <InitialAvatar name={active.name} size={80} />
+                  )}
                   <div className="text-left">
                     <DialogTitle className="text-2xl font-semibold text-fg">
                       {active.name}
@@ -151,7 +206,7 @@ export function SpeakerGrid() {
                     <h4 className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
                       <Quote className="size-3" /> 报告摘要
                     </h4>
-                    <p className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <p className="rounded-xl border border-black/5 bg-bg-alt/60 p-4">
                       {active.abstract}
                     </p>
                   </div>
