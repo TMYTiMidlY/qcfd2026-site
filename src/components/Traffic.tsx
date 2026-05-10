@@ -1,5 +1,5 @@
-import { Plane, TrainFront, Train, Car, Navigation } from 'lucide-react'
-import { traffic, type TrafficInfo } from '@/data/traffic'
+import { Plane, TrainFront, Train, Car, CloudSun, Navigation } from 'lucide-react'
+import { traffic, weather, type TrafficInfo } from '@/data/traffic'
 
 const iconMap: Record<TrafficInfo['icon'], typeof Plane> = {
   plane: Plane,
@@ -22,7 +22,7 @@ export function Traffic() {
             从机场 / 高铁站抵达会场
           </h2>
           <p className="mt-3 text-fg-soft">
-            合肥有 1 个民用机场与 2 个主要火车站，均可方便抵达翡翠湖迎宾馆。具体路线、用时与费用请以地图 App 实时查询为准。
+            合肥有 1 个民用机场与 2 个主要火车站，均可方便抵达翡翠湖迎宾馆。距离、时长、费用为公开资料综合估算，仅供参考；具体路线请以地图 App 实时查询为准。
           </p>
         </div>
 
@@ -39,11 +39,19 @@ export function Traffic() {
                     <h3 className="text-lg font-semibold text-fg">
                       {t.origin}
                     </h3>
-                    <p className="mt-1 text-sm text-fg-soft">
-                      {t.hint}
+                    <p className="mt-1 text-xs text-fg-muted">
+                      {t.distance} · {t.duration}
                     </p>
                   </div>
                 </div>
+                <ul className="space-y-2 text-sm text-fg-soft">
+                  {t.notes.map((n, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="mt-1.5 size-1 shrink-0 rounded-full bg-primary/70" />
+                      <span>{n}</span>
+                    </li>
+                  ))}
+                </ul>
                 <a
                   href={amapUrl(t.amapKeyword)}
                   target="_blank"
@@ -58,9 +66,13 @@ export function Traffic() {
           })}
         </div>
 
-        <p className="mt-8 text-xs text-fg-muted">
-          ⓘ 距离 / 用时 / 票价等具体数字以地图 App 实时查询为准；如组委会另行安排接驳，请以正式通知为准。
-        </p>
+        <div className="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-5 sm:flex-row sm:items-center">
+          <CloudSun className="size-6 shrink-0 text-primary" />
+          <p className="text-sm text-fg-soft">
+            <span className="font-medium text-fg">{weather.city} · {weather.period}：</span>
+            {weather.summary}
+          </p>
+        </div>
       </div>
     </section>
   )

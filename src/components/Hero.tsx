@@ -16,9 +16,9 @@ function useCountdown(target: string) {
   return { days, hours, isPast: diff === 0 }
 }
 
-// 倒计时锚定 5/23 09:00 学术会议开场（docx 仅写「5月23日，学术会议」未明时段，09:00 为
+// 倒计时锚定 5/23 08:00 学术会议开场（docx 仅写「5月23日，学术会议」未明时段，08:00 为
 // 学术会议常见默认开场时间，详见 SOURCES.md §1）
-const COUNTDOWN_TARGET = '2026-05-23T09:00:00+08:00'
+const COUNTDOWN_TARGET = '2026-05-23T08:00:00+08:00'
 
 export function Hero() {
   const { days, hours, isPast } = useCountdown(COUNTDOWN_TARGET)
