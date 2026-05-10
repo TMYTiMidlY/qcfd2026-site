@@ -1,0 +1,12 @@
+[workspace]
+authors = ["Agony5757 <chenzhaoyun@iai.ustc.edu.cn>"]
+channels = ["conda-forge"]
+name = "qcfd2026-site"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+bun = ">=1.3.11,<2"
+unzip = ">=6.0,<7"
