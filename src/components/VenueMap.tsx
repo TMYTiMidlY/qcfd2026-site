@@ -23,11 +23,6 @@ const mapLinks = [
     label: '腾讯地图',
     href: `https://map.qq.com/#search?keyword=${encodeURIComponent(VENUE_NAME)}`,
   },
-  {
-    key: 'apple',
-    label: '苹果地图',
-    href: `https://maps.apple.com/?q=${encodeURIComponent(VENUE_NAME)}`,
-  },
 ]
 
 export function VenueMap() {

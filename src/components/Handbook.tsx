@@ -10,16 +10,16 @@ const items: { title: string; desc: string; available: boolean; kind: ItemKind }
     kind: 'pdf',
   },
   {
+    title: '会议通知',
+    desc: '中国力学学会用印的正式通知，可用于参会代表所在单位的差旅、注册费报销凭证',
+    available: false,
+    kind: 'pdf',
+  },
+  {
     title: '第二轮通知',
     desc: '会议组织机构、特邀嘉宾、注册细则与联系方式（由组委会通过微信公众号文章发布）',
     available: false,
     kind: 'wechat',
-  },
-  {
-    title: '参会指南',
-    desc: '签到、用餐、交通班车与现场支持信息',
-    available: false,
-    kind: 'mixed',
   },
 ]
 
