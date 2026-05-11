@@ -305,7 +305,47 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 - **pixi 而不是 `apt-get download` 解 deb**：pixi 锁定版本、跨机可复现、`pixi.lock` 进 git；deb 那套没有版本管理也无法 CI。
 - **项目级而不是用户全局**：`.pixi/envs/default/` 在 `qcfd2026-site/`，删项目就全清干净；不污染 `$HOME` 或 `/usr`。
 
+### 7.6 Agent 视觉自审工作流（推荐编辑后跑一遍）
+
+仅仅 `tsc -b && vite build` 通过、文案出现在 bundle 里，不代表**页面看起来对**。
+布局压坏、图片裁歪、移动端断行难看，这些只有靠像素层面的复核才发现得了。
+因此本仓库约定：**任何改 UI 的 commit，agent 都应自己跑一遍下面的 5 步循环**——
+就像人类开发会顺手刷新一下浏览器一样，agent 的"浏览器"就是 Playwright MCP + `view` 工具。
+
+```text
+1. 起 dev server（用户可能已开，先 `ss -tlnp | grep -E ":(5173|8888)"` 探测；
+   没开才自己 `pixi run bun run dev` 后台启动）
+2. playwright-browser_resize 1280×800 → playwright-browser_navigate → playwright-browser_take_screenshot 桌面全页
+3. playwright-browser_resize 390×844 → 重新 navigate → 截首屏 + 滚到关键 section（speakers/schedule/guests/chair）各截一张
+4. 对每张图调 view 工具自己看一眼，对比改动意图：
+   - 文案/数据：新加的字段是否出现、是否按预期截断
+   - 布局：移动端有没有溢出、卡片是否对齐、Hero 副标题断行是否自然
+   - 图片：头像有没有歪、有没有糊
+   - 占位：placeholder 是否传达"待更新"语义，而不是"乱码头像"
+5. 发现问题→改→回到第 2 步；都 OK 才 commit。最后**不要忘了 kill 自己起的 dev server**
+   （ps + kill <pid>；不能用 pkill/killall）
+```
+
+关键工具一览：
+
+| 用途 | 工具 |
+|---|---|
+| 启 dev server | `pixi run bun run dev` 或用户已开的 `http://localhost:8888/`（看 `vite.config.ts`）|
+| 设视口 | `playwright-browser_resize` |
+| 切页面 | `playwright-browser_navigate` |
+| 滚到任意 section | `playwright-browser_evaluate` 里 `document.querySelector('#xxx').getBoundingClientRect()` 算偏移再 `window.scrollTo` |
+| 截图 | `playwright-browser_take_screenshot`（注意 `filename` 只能写 `.playwright-mcp/<name>.png` 这种仓库相对路径，绝对路径会被 sandbox 拒）|
+| 看图 | `view` 工具，支持 PNG/JPG/WebP |
+| 关 server | 先 `ss -tlnp` 拿 PID，再 `kill <pid>`（**不允许** `pkill`/`killall`）|
+
+截图产物落在 `.playwright-mcp/`，已经在 `.gitignore` 里——这是 agent 的草稿纸，
+跨会话不保留，需要长期归档的截图请显式 `cp` 到 session files 或 commit 进仓库。
+
+> 自我克制：不要为了"看着 OK"反复猜微调。**先用文字说出"我以为它会怎样"**，
+> 截图打开后逐项 √ / ✗ 对照，发现 ✗ 才动手；否则容易陷入像素级别的无效调参。
+
 ---
+
 
 ## 八、常见问题
 

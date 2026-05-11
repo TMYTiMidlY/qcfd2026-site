@@ -1,4 +1,4 @@
-import { Award, Building2, ExternalLink, GraduationCap } from 'lucide-react'
+import { Award, Building2, GraduationCap } from 'lucide-react'
 import { conference } from '@/data/conference'
 
 export function ChairIntro() {
@@ -50,32 +50,6 @@ export function ChairIntro() {
               </div>
 
               <p className="text-fg-soft/95">{chair.bio}</p>
-
-              <div>
-                <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                  主要荣誉
-                </h4>
-                <ul className="flex flex-wrap gap-2">
-                  {chair.honors.map((h) => (
-                    <li
-                      key={h}
-                      className="rounded-full border border-black/10 bg-bg-alt/60 px-3 py-1 text-xs text-fg-soft"
-                    >
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <a
-                href={chair.homepage}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-primary hover:underline"
-              >
-                北京大学个人主页
-                <ExternalLink className="size-3" />
-              </a>
             </div>
           </div>
         </article>
