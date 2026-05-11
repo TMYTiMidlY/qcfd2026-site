@@ -12,6 +12,9 @@ dist/
 .idea/
 .DS_Store
 
+# Playwright MCP scratch (screenshots / console logs)
+.playwright-mcp/
+
 # Local-only — do NOT commit (token / hooks symlink to parent project)
 .mcp.json
 .github/hooks/

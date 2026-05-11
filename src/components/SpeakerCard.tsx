@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Quote, Building2 } from 'lucide-react'
+import { Quote, Building2, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Speaker } from '@/data/speakers'
 import { speakers } from '@/data/speakers'
@@ -56,13 +56,17 @@ function Photo({ src, name, className }: PhotoProps) {
     return (
       <div
         className={cn(
-          'grid h-full w-full place-items-center bg-gradient-to-br from-primary/10 to-secondary/15 text-primary',
+          'flex h-full w-full flex-col items-center justify-center gap-2 bg-bg-alt/80 text-fg-muted',
           className,
         )}
         aria-hidden
       >
-        <span className="text-5xl font-semibold">
-          {name.trim().charAt(0)}
+        <UserRound
+          className="size-1/3 opacity-60"
+          strokeWidth={1.25}
+        />
+        <span className="rounded-full border border-black/10 bg-white/70 px-2.5 py-0.5 text-[10px] font-medium tracking-wider text-fg-muted">
+          照片待更新
         </span>
       </div>
     )
@@ -164,7 +168,12 @@ export function SpeakerGrid() {
                       className="size-20 shrink-0 rounded-2xl object-cover object-top ring-1 ring-black/5"
                     />
                   ) : (
-                    <InitialAvatar name={active.name} size={80} />
+                    <div className="flex size-20 shrink-0 flex-col items-center justify-center gap-1 rounded-2xl bg-bg-alt/80 text-fg-muted ring-1 ring-black/5">
+                      <UserRound className="size-7 opacity-60" strokeWidth={1.25} />
+                      <span className="text-[10px] tracking-wider text-fg-muted">
+                        待更新
+                      </span>
+                    </div>
                   )}
                   <div className="text-left">
                     <DialogTitle className="text-2xl font-semibold text-fg">
