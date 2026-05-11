@@ -67,11 +67,11 @@ Tailwind v4 的 `@utility` 指令直接在 CSS 里写：
 
 ### 2.5 单页 + 锚点滚动
 
-整个站只有一个路由，通过 11 个 section 上下排：
+整个站只有一个路由，通过 12 个 section 上下排：
 
 ```
-Header (sticky) → Hero → GuestSection → TopicGrid → SpeakerCard
-→ Schedule → Handbook → VenueMap → Traffic → NewsList → Footer
+Header (sticky) → Hero → ChairIntro → GuestSection → TopicGrid
+→ SpeakerCard → Schedule → Handbook → VenueMap → Traffic → NewsList → Footer
 ```
 
 Header 提供锚点导航，`html { scroll-behavior: smooth }` 让点击平滑滚动。
@@ -103,8 +103,8 @@ qcfd2026-site/
     │                                # @utility 自定义 utility
     ├── lib/utils.ts                # cn() helper
     ├── data/
-    │   ├── conference.ts           # 会议元信息
-    │   ├── speakers.ts             # 11 报告人 + 3 院士嘉宾
+    │   ├── conference.ts           # 会议元信息（含大会主席 chair）
+    │   ├── speakers.ts             # 14 报告人 + 3 院士嘉宾（speakers / guests 两个数组）
     │   ├── topics.ts               # 议题方向
     │   ├── schedule.ts             # 三天日程
     │   ├── news.ts                 # 会议新闻
@@ -112,12 +112,13 @@ qcfd2026-site/
     └── components/
         ├── Header.tsx
         ├── Hero.tsx                # 倒计时 + CTA
+        ├── ChairIntro.tsx          # 大会主席单卡（杨越）
         ├── GuestSection.tsx        # 特邀院士嘉宾
         ├── TopicGrid.tsx
-        ├── SpeakerCard.tsx         # 报告人卡片 + Dialog 弹窗
+        ├── SpeakerCard.tsx         # 报告人卡片 + Dialog 弹窗（导出 SpeakerCard / SpeakerGrid）
         ├── Schedule.tsx
         ├── Handbook.tsx
-        ├── VenueMap.tsx            # 高德嵌入 + 双地图导航
+        ├── VenueMap.tsx            # 百度地图嵌入 + 三家导航跳转
         ├── Traffic.tsx
         ├── NewsList.tsx
         ├── Footer.tsx
@@ -142,12 +143,12 @@ pixi run bun install      # 安装 JS 依赖
 ### 常用命令
 
 ```bash
-pixi run bun run dev                    # 开发服务器（5173 / 5174 自动避让）
-pixi run bun run dev -- --host          # 监听 0.0.0.0，局域网/对端可访问
-pixi run bun run build                  # 生产构建 → dist/
+pixi run bun run dev                    # 开发服务器（默认 8888，见 vite.config.ts；端口被占时 vite 自动选下一个）
+pixi run bun run dev -- --host          # 同时监听 0.0.0.0，局域网/对端可访问
+pixi run bun run build                  # 生产构建 → dist/（含 tsc -b 类型检查）
 pixi run bun run preview                # 本地预览 dist/（默认 4173）
 pixi run bun run preview -- --host 0.0.0.0 --port 8888   # 指定地址端口
-pixi run bun run tsc --noEmit           # 类型检查
+pixi run bunx --bun tsc --noEmit        # 仅类型检查（package.json 没有 tsc 脚本，走 bunx）
 ```
 
 ### 加新 shadcn 组件
@@ -300,12 +301,14 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 
 ```
 请用 Playwright MCP 验证截图通路：
-1. 在 qcfd2026-site/ 目录下后台启动 `pixi run bun run dev`，等 Vite 输出 "Local: http://localhost:5173"。
-2. 用 playwright-browser_resize 设 1280×800，playwright-browser_navigate 打开 http://localhost:5173/。
+1. 探测 dev server：`ss -tlnp | grep -E ":(5173|8888)"`。
+   - 已在监听（用户/上一会话起的）→ **直接复用**那个端口，跳到第 2 步，结束时**不要** kill。
+   - 没在监听 → `pixi run bun run dev` 后台启动，等 Vite 输出 "Local: http://localhost:8888"。
+2. 用 playwright-browser_resize 设 1280×800，playwright-browser_navigate 打开第 1 步确认的 URL（默认 http://localhost:8888/）。
 3. 用 playwright-browser_take_screenshot 截一张全页 PNG，保存到 session files。
 4. 再切到 390×844 + isMobile，截一张移动端首屏。
 5. 用 view 工具打开两张图给我看，并简评响应式是否合理。
-6. 结束时 kill 掉 vite 进程。
+6. 收尾：**仅当第 1 步是自己起的 dev**，才 `kill <pid>` 关掉；复用别人开的就什么都别动（不允许 `pkill` / `killall`）。
 ```
 
 如果新会话报 `Browser "chromium" is not installed` 或 `Missing system dependencies`，说明 7.1 的两条命令还没跑过；如果报 `libXXX.so not found`，说明这个 lib 在 `pixi.toml` 里漏了，按下面的 troubleshooting 处理。
@@ -335,8 +338,8 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 就像人类开发会顺手刷新一下浏览器一样，agent 的"浏览器"就是 Playwright MCP + `view` 工具。
 
 ```text
-1. 起 dev server（用户可能已开，先 `ss -tlnp | grep -E ":(5173|8888)"` 探测；
-   没开才自己 `pixi run bun run dev` 后台启动）
+1. 起 dev server：先 `ss -tlnp | grep -E ":(5173|8888)"` 探测；端口已在监听就**直接复用**那个端口，
+   没在监听才自己 `pixi run bun run dev` 后台启动（默认 8888，见 vite.config.ts）。
 2. playwright-browser_resize 1280×800 → playwright-browser_navigate → playwright-browser_take_screenshot 桌面全页
 3. playwright-browser_resize 390×844 → 重新 navigate → 截首屏 + 滚到关键 section（speakers/schedule/guests/chair）各截一张
 4. 对每张图调 view 工具自己看一眼，对比改动意图：
@@ -344,8 +347,8 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
    - 布局：移动端有没有溢出、卡片是否对齐、Hero 副标题断行是否自然
    - 图片：头像有没有歪、有没有糊
    - 占位：placeholder 是否传达"待更新"语义，而不是"乱码头像"
-5. 发现问题→改→回到第 2 步；都 OK 才 commit。最后**不要忘了 kill 自己起的 dev server**
-   （ps + kill <pid>；不能用 pkill/killall）
+5. 发现问题→改→回到第 2 步；都 OK 才 commit。收尾时**只关自己第 1 步起的 dev server**
+   （`ss -tlnp` 拿 PID → `kill <pid>`；复用别人开的就什么都别动；不允许 `pkill`/`killall`）。
 ```
 
 关键工具一览：
@@ -358,7 +361,7 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 | 滚到任意 section | `playwright-browser_evaluate` 里 `document.querySelector('#xxx').getBoundingClientRect()` 算偏移再 `window.scrollTo` |
 | 截图 | `playwright-browser_take_screenshot`（注意 `filename` 只能写 `.playwright-mcp/<name>.png` 这种仓库相对路径，绝对路径会被 sandbox 拒）|
 | 看图 | `view` 工具，支持 PNG/JPG/WebP |
-| 关 server | 先 `ss -tlnp` 拿 PID，再 `kill <pid>`（**不允许** `pkill`/`killall`）|
+| 关 server | **仅当本会话自己起的**才关：`ss -tlnp` 拿 PID → `kill <pid>`；复用别人开的不要碰（**不允许** `pkill`/`killall`）|
 
 截图产物落在 `.playwright-mcp/`，已经在 `.gitignore` 里——这是 agent 的草稿纸，
 跨会话不保留，需要长期归档的截图请显式 `cp` 到 session files 或 commit 进仓库。
