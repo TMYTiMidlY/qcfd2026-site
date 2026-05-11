@@ -51,17 +51,17 @@ type PhotoProps = {
   className?: string
 }
 
-function CircleAvatar({ src, name, className }: PhotoProps) {
+function Photo({ src, name, className }: PhotoProps) {
   if (!src) {
     return (
       <div
         className={cn(
-          'grid h-full w-full place-items-center bg-gradient-to-br from-primary/15 to-secondary/20 text-primary',
+          'grid h-full w-full place-items-center bg-gradient-to-br from-primary/10 to-secondary/15 text-primary',
           className,
         )}
         aria-hidden
       >
-        <span className="text-2xl font-semibold sm:text-3xl">
+        <span className="text-5xl font-semibold">
           {name.trim().charAt(0)}
         </span>
       </div>
@@ -92,24 +92,29 @@ export function SpeakerCard({
     <button
       type="button"
       onClick={onOpen}
-      className="group card-surface flex h-full flex-col items-center gap-3 p-4 text-center transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(3,105,161,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:p-5"
+      className="group card-surface flex h-full flex-col overflow-hidden text-left transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(3,105,161,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
     >
-      <div className="relative aspect-square w-20 shrink-0 overflow-hidden rounded-full ring-1 ring-black/5 sm:w-24 lg:w-28">
-        <CircleAvatar src={speaker.photo} name={speaker.name} />
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-bg-alt">
+        <Photo src={speaker.photo} name={speaker.name} />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/15 to-transparent"
+          aria-hidden
+        />
       </div>
-      <div className="flex min-w-0 flex-1 flex-col items-center">
-        <h3 className="text-sm font-semibold text-fg sm:text-base">
-          {speaker.name}
-        </h3>
-        <p className="mt-0.5 text-[11px] font-medium text-primary sm:text-xs">
-          {speaker.title}
-        </p>
-        <p className="mt-1 inline-flex items-start justify-center gap-1 text-[11px] leading-snug text-fg-muted sm:text-xs">
+      <div className="flex flex-1 flex-col p-3 sm:p-5">
+        <h3 className="text-base font-semibold text-fg sm:text-lg">{speaker.name}</h3>
+        <p className="mt-1 text-[11px] font-medium text-primary sm:text-xs">{speaker.title}</p>
+        <p className="mt-1 inline-flex items-start gap-1.5 text-[11px] text-fg-muted sm:text-xs">
           <Building2 className="mt-0.5 size-3 shrink-0" />
           <span className="line-clamp-2">{speaker.affiliation}</span>
         </p>
-        <span className="mt-3 text-[11px] font-medium text-primary opacity-70 transition group-hover:opacity-100 sm:text-xs">
-          查看详情 →
+        {speaker.topic ? (
+          <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-fg-soft sm:mt-4 sm:text-sm">
+            {speaker.topic}
+          </p>
+        ) : null}
+        <span className="mt-auto pt-3 text-[11px] font-medium text-primary opacity-70 transition group-hover:opacity-100 sm:pt-4 sm:text-xs">
+          查看简介与摘要 →
         </span>
       </div>
     </button>
@@ -135,7 +140,7 @@ export function SpeakerGrid() {
           <span className="text-xs text-fg-muted">报告人持续更新中</span>
         </div>
 
-        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {speakers.map((s) => (
             <SpeakerCard
               key={s.id}
