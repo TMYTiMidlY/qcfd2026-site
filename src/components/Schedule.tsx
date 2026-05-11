@@ -16,7 +16,8 @@ export function Schedule() {
             三天日程总览
           </h2>
           <p className="mt-3 text-fg-soft">
-            5 月 22 日报到，23 日全天学术会议，24 日参观与离会。详细议程在临会前另行公布。
+            5 月 22 日报到，23 日全天学术会议（14 个邀请报告，按下方时段进行），
+            24 日参观与离会。
           </p>
         </div>
 
@@ -69,7 +70,14 @@ export function Schedule() {
                   {item.time ?? '—'}
                 </span>
                 <div className="flex-1">
-                  <p className="text-base text-fg">{item.title}</p>
+                  <p className="text-base text-fg">
+                    {item.speaker ? (
+                      <span className="mr-2 font-semibold text-primary">
+                        {item.speaker}
+                      </span>
+                    ) : null}
+                    {item.title}
+                  </p>
                   {item.note ? (
                     <p className="mt-1 text-xs text-fg-muted">{item.note}</p>
                   ) : null}

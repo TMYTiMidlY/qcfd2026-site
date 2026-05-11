@@ -13,9 +13,19 @@ export type NewsItem = {
   excerpt: string
   url: string
   tag?: string
+  thumbnail?: string
 }
 
 export const news: NewsItem[] = [
+  {
+    id: 'round2-2026',
+    date: '2026-05-11',
+    title: '第三届流体力学量子计算前沿研讨会通知（第二轮）',
+    excerpt:
+      '组委会发布第二轮通知：明确会议组织机构、特邀嘉宾（郭光灿、陆夕云、郭国平）、报告专家名单（持续更新中）、注册细则与联系方式。会议将于 2026 年 5 月 22-24 日在合肥翡翠湖迎宾馆 3 号楼召开。',
+    url: 'https://mp.weixin.qq.com/s/8Tnf3EMgEu-ugjtzciO9Ow',
+    tag: '第二轮通知',
+  },
   {
     id: 'preview-2026',
     date: '2026-04',

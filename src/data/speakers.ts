@@ -63,7 +63,7 @@ export const speakers: Speaker[] = [
     abstract:
       '数据驱动计算力学可降低与本构关系相关的研发成本，故在先进复合材料与结构领域应用前景广阔，但宏细观一体化本构数据采集和多尺度数据驱动算法面临算力考验。量子计算在算力上有望超越经典计算，但亟需拓展应用场景并开发相应算法。本研究旨在从本构数据、驱动算法和仿真平台三方面发展量子计算增强的数据驱动计算力学，提升复合材料多尺度仿真分析效率和精度。',
   },
-  {
+{
     id: 'xiao-dunhui',
     photo: '/avatars/xiao-dunhui.webp',
     name: '肖敦辉',
@@ -74,18 +74,18 @@ export const speakers: Speaker[] = [
     abstract:
       '本报告围绕量子增强流体降阶模型（QROM）研究方面的进展展开。讨论基于 VQSVD 与线性层增强量子化 LSTM 神经网络（QLSTM）的混合量子-经典降阶模型：VQSVD 用于压缩非定常流场并提取低维系数，L-QLSTM 用于学习系数演化；从数学角度，分析有限测量次数下 VQSVD 随机梯度优化的收敛性，并建立 L-QLSTM 的 Lipschitz 稳定性理论，给出多步预测误差界。同时讨论面向基于量子化本征正交分解 QPOD 与量子深度核学习 QDKL 的湍流量子降阶模型（QROM）：以量子正交分解构造空间基，并利用量子特征空间提升瞬态动力学预测能力。数值结果显示量子机器学习在降低参数规模、提升训练效率与增强复杂流动长期稳定预测方面的潜力。',
   },
-  {
+{
     id: 'niu-xiaodong',
     photo: '/avatars/niu-xiaodong.webp',
     name: '牛小东',
     title: '教授',
     affiliation: '汕头大学 工学院机械工程系',
-    topic: '两种量子-经典混合 QLBM 研究：多物理场耦合 QLBM 与双线路非平衡线化 QLBM',
+    topic: '两种量子-经典混合 QLBM 研究：基于分布函数演化的多物理场耦合 QLBM & 高效优化迁移双线路非平衡线化 QLBM',
     bio: '汕头大学工学院机械工程系教授、博士生导师，日本同志社大学客座教授，中国力学学会流体力学分委会电磁流体力学专业组委员，广东省"扬帆计划"培养高层次人才，全国总工会十七大、十八大代表，广东省工会十四大、十五大代表，中国空气动力学会理事。入选 2020、2021 年度斯坦福大学全球前 2% 顶尖科学家学科榜单；2022 年荣获机械工业科技奖（技术发明奖一等奖），2021 年荣获北京市科学技术奖（技术发明奖一等奖），2019 年广东省教育教学成果一等奖与汕头大学李嘉诚基金会卓越教学奖。主要研究领域包括磁流体多相流、格子玻尔兹曼方法和量子计算。',
     abstract:
-      '本报告介绍我们最近发展的两种针对不可压缩复杂流动模拟的量子-经典混合格子玻尔兹曼方法（QLBM）。其一为基于涡量-流函数方程求解、仅依赖分布函数演化的多物理场耦合 QLBM，核心在于构建含多物理场分布函数的超碰撞矩阵，通过耦合周期性边界条件与源项处理，实现单一电路上多个物理场的耦合信息传递。其二是基于此前模块化非平衡线化 QLBM 的高效优化工作：通过构建粒子速度模型的正交速度与对角速度方向双电路框架，分别采用量子行走与并行基态移位（ParaShift）策略，实现迁移步骤的更高效并行计算。优化后的 QLBM 显著降低量子电路深度并减少量子资源开销，并在多个二维与三维基准流动模型上得到验证。',
+      '本报告主要介绍我们最近发展的两种针对不可压缩复杂流动模拟的量子-经典混合格子玻尔兹曼方法（QLBM）。首先，引入一种基于涡量-流函数方程求解、仅依赖分布函数演化的多物理场耦合 QLBM。该方法核心在于构建了一个含多物理场分布函数的超碰撞矩阵，通过耦合周期性边界条件与源项的处理，能在单一电路上实现多个物理场的耦合信息传递。其次，介绍基于此前模块化非平衡线化 QLBM 上开展的高效优化工作。该工作通过构建粒子速度模型的正交速度与对角速度方向双电路框架，两个速度方向分别采用量子行走和并行基态移位（ParaShift）策略，实现了迁移步骤的更高效并行计算。与之前全部速度方向基于量子行走的处理相比，优化后的 QLBM 显著降低了量子电路深度并减少量子资源开销。两种方法都在多个二维和三维基准流动模型上进行了验证。',
   },
-  {
+{
     id: 'wu-feng',
     photo: '/avatars/wu-feng.webp',
     name: '吴锋',
@@ -96,7 +96,7 @@ export const speakers: Speaker[] = [
     abstract:
       '现有量子有限元研究多采用 VQLS 求解经典有限元刚度方程，但存在两大瓶颈：其一，基于 Hadamard 测试的损失函数计算，经泡利分解后复杂度高，无量子加速优势；其二，VQLS 依赖误差最小化损失函数，多参数优化时收敛困难，常出现"小损失大误差"现象。针对上述问题，本文提出深度融合经典有限元理论与量子计算优势的研究路径：(1) 构建适用于量子计算的有限元建模方法，实现与系统规模无关的酉矩阵分解，将单酉矩阵实现复杂度显著降低；(2) 基于经典力学最小势能原理设计优化列式，替代传统误差驱动损失函数；(3) 开发低复杂度量子测试方法，规避大量级量子电路调用。在此基础上提出新型体素表示量子有限元框架（VQFEM），降低量子端计算时间复杂度，并通过数值实验验证其在收敛性与计算效率上的显著提升。',
   },
-  {
+{
     id: 'zhang-lei',
     photo: '/avatars/zhang-lei.webp',
     name: '张镭',
@@ -107,7 +107,7 @@ export const speakers: Speaker[] = [
     abstract:
       '量子计算为大规模科学计算提供了显著的潜在加速能力。量子科学计算平台 UnitaryLab 致力于构建面向科学与工程计算的综合性基础平台，覆盖偏微分方程 / 常微分方程求解、数值线性代数、优化、机器学习与统计计算等领域，旨在突破经典计算的算力瓶颈。基于上海交通大学量子科学计算团队原创的"薛定谔化"等系列算法，该平台实现了从"数学模型→量子算法→量子线路模拟"的全链路覆盖，为偏微分方程的量子计算提供从开发到应用的全流程支持。UnitaryLab 2.0 版本将完成核心升级，打造多领域量子算法库，集成主流开源算法，支持快速调用与二次开发；同时创新融入量子智能体能力，推动科学计算任务全流程智能化，进一步打通"算法-算力-应用"链路，使量子计算研发与产业应用更高效、更易落地。平台还将持续开发更多垂直领域工具箱，不仅支撑前沿科研探索，也为各应用领域提供高效的量子解决方案。',
   },
-  {
+{
     id: 'tang-hui',
     photo: '/avatars/tang-hui.webp',
     name: '唐辉',
@@ -116,9 +116,9 @@ export const speakers: Speaker[] = [
     topic: '基于量子强化学习的主动流动控制',
     bio: '研究涵盖流体力学多个领域，尤其在流动控制与流固耦合方向，已发表 140 余篇论文，含 5 篇 ESI 高被引文章。2024 年入选英国皇家航空学会会士（FRAeS）。2025 年作为主席在香港组织 AI 赋能流体力学国际研讨会。担任多个期刊编委、香港雾化与喷雾系统学会（ILASS-HK）副主席、香港力学学会（HKSTAM）秘书长，以及中国空气动力学会智能流体力学专业组副主任委员。',
     abstract:
-      '对复杂流动系统实现高效的主动流动控制仍是亟待突破的难题，根本原因在于被控流场固有的高维度、强非线性及复杂时空演化。量子机器学习有望为此类问题提供新的解决途径。本研究提出基于量子强化学习的主动流动控制框架，融合变分量子电路（VQC）与近端策略优化算法（PPO）实现控制策略学习。我们首先在 CartPole 问题上对量子强化学习进行验证，结果表明其与经典网络控制效果相差不大但参数大幅减小；进一步将该方法应用于雷诺数 100 的方柱绕流主动控制，由网络输出圆柱表面连续吹吸控制指令，有效抑制涡脱落实现减阻，显著降低平均阻力并抑制升力振荡，展示了量子增强学习应对复杂流体力学问题的潜力。',
+      '对复杂流动系统实现高效的主动流动控制仍是一项亟待突破的难题，其根本原因在于被控流场固有的高维度、强非线性及复杂的时空演化。量子机器学习有望为此类问题提供新的解决途径，这得益于量子计算在特定问题上相较于经典计算的潜在优势。为此，本研究提出了一种基于量子强化学习的主动流动控制框架，通过融合变分量子电路（VQC）与近端策略优化算法（PPO）实现控制策略的学习。首先，我们在 CartPole 问题上对量子强化学习进行了验证，结果表明，该方法与经典网络相比控制效果相差不大，但参数大大减小，表现出更优的参数效率。进一步，我们将量子强化学习应用于雷诺数 100 的方柱绕流主动控制。该混合架构将高维流动状态编码至量子策略网络中，由网络输出圆柱表面的连续吹吸控制指令，从而有效抑制涡脱落以实现减阻。数值模拟结果表明，基于量子强化学习获得的控制能显著降低平均阻力并抑制升力振荡，并有效抑制大尺度涡脱落。本研究结果展示了量子增强学习在应对复杂流体力学问题方面的潜力。',
   },
-  {
+{
     id: 'liu-jinpeng',
     photo: '/avatars/liu-jinpeng.webp',
     name: '刘锦鹏',
@@ -127,20 +127,20 @@ export const speakers: Speaker[] = [
     topic: 'Towards Practical Quantum Simulation of Non-unitary Dynamics',
     bio: '清华大学丘成桐数学科学中心助理教授、博士生导师，入选国家海外高层次人才引进计划。2022-2024 年于麻省理工与伯克利任博士后，2022 年博士毕业于马里兰大学。研究方向为量子科学计算与量子科学智能，发表 PNAS、Nat. Commun.、PRL、CMP、JCP、Quantum 等期刊及 NeurIPS、QIP、TQC 等会议，受到 Quanta、SIAM News、MATH+ 等媒体报道，获 ICCM 毕业论文金奖，担任量子信息权威期刊 Quantum 编委。',
     abstract:
-      'Quantum computers are expected to excel in simulating unitary dynamics, while most applications in scientific and engineering computations involve non-unitary dynamics. We propose a simple method for simulating a general class of non-unitary dynamics as a Linear Combination of Hamiltonian Simulation (LCHS) problems [PRL 2023] with optimal complexity, develop a random-LCHS framework with circuit efficiency for early fault-tolerant designs, present a variational LCHS for non-Hermitian system experiments, and describe a rigorous inf-LCHS Theorem for infinite-dimensional and unbounded operators.',
+      'Quantum computers are expected to excel in simulating unitary dynamics, while most applications in scientific and engineering computations involve non-unitary dynamics. First, we propose a simple method for simulating a general class of non-unitary dynamics as a linear combination of Hamiltonian simulation (LCHS) problems [Phys. Rev. Lett. 2023]. The LCHS method can achieve optimal complexity. Second, we develop a random compilation framework (random-LCHS) with circuit efficiency in the early fault-tolerant designs. Third, we develop a variational quantum algorithm (variational LCHS) for non-Hermitian system experiments. Finally, we describe a rigorous inf-LCHS Theorem for infinite-dimensional and unbounded operators.',
   },
-  {
+{
     id: 'an-dong',
     photo: '/avatars/an-dong.webp',
     name: '安冬',
     title: '助理教授',
     affiliation: '北京大学 北京国际数学研究中心',
-    topic: 'Nearly Optimal Quantum Simulation of Slow Time-Dependent Hamiltonians',
+    topic: 'Nearly optimal quantum simulation of slow time-dependent Hamiltonians',
     bio: '北京大学北京国际数学研究中心助理教授。2016 年本科毕业于北京大学数学科学学院，2021 年博士毕业于美国加州大学伯克利分校数学系。2021-2024 年于美国马里兰大学从事博士后研究。研究方向为计算数学与量子计算、量子物理的交叉，主要关心量子算法及其在科学计算中的应用，包括线性方程组与微分方程的量子算法、量子模拟算法、量子计算与优化算法、绝热量子计算与变分量子算法等。',
     abstract:
-      'Simulating the time evolution of quantum systems remains one of the most promising applications of quantum computing. We present an efficient quantum algorithm designed to simulate slowly varying time-dependent Hamiltonians. By leveraging Floquet theory alongside a smooth extension of the Hamiltonians to periodic systems, our approach achieves near-optimal scaling — specifically, an almost linear and additive dependence on evolution time and error parameters. We will also discuss how to extend this algorithm to general slow non-unitary dynamics using the linear combination of Hamiltonian simulation (LCHS) technique.',
+      'Simulating the time evolution of quantum systems remains one of the most promising applications of quantum computing. In this talk, we will present an efficient quantum algorithm designed to simulate slowly varying time-dependent Hamiltonians. By leveraging Floquet theory alongside a smooth extension of the Hamiltonians to periodic systems, our approach achieves near-optimal scaling, specifically, an almost linear and additive dependence on evolution time and error parameters. We will also discuss how to extend this algorithm to general slow non-unitary dynamics using the linear combination of Hamiltonian simulation technique.',
   },
-  {
+{
     id: 'xiong-shiying',
     photo: '/avatars/xiong-shiying.webp',
     name: '熊诗颖',
@@ -151,7 +151,7 @@ export const speakers: Speaker[] = [
     abstract:
       '浅水波计算是海啸预警与流域防洪的重要方法，但在超大尺度模拟中，经典数值模式常面临自由度爆炸与收敛困难的瓶颈。量子计算凭借指数级的存储与并行优势，为突破大规模多尺度模拟的算力限制提供新途径。本研究从含量子压强项的浅水方程出发，通过 Madelung 变换建立其与 Gross-Pitaevskii 方程的映射关系，构建具有二阶时间精度的谱方法变分量子求解框架。同时提出有效 Bond 数，用于匹配量子压强与浅水表面波的色散特征，并通过表面张力类比验证其物理合理性。基于该含色散修正的模型，实现了钱塘江"矩阵潮"和"三叉潮"等复杂潮波现象的量子模拟，揭示不同精度下水波耦合结构的演化规律，为利用量子算力研究复杂浅水动力学提供新的建模思路与方法支撑。',
   },
-  {
+{
     id: 'xu-liang',
     photo: '/avatars/xu-liang.webp',
     name: '许亮',
@@ -162,18 +162,18 @@ export const speakers: Speaker[] = [
     abstract:
       '数值模拟效率的跃升是推动先进飞行器气动设计革新的关键引擎。当前传统超级计算机面临内存与算力的双重制约，千万乃至亿级自由度的全尺寸模拟难以高效推进。量子计算凭借量子态叠加与纠缠原理所蕴含的指数级加速潜力，正为应对航天领域大规模流体仿真的效率瓶颈探索一条前沿技术路径。本报告聚焦量子-经典混合计算范式在航天空气动力学中的应用前景，梳理中国航天空气动力技术研究院围绕可压缩流动模拟所开展的探索性研究工作。在基础层面，重点阐述面向空气动力学控制方程计算格式的量子编码、哈密顿模拟及信息提取等策略；在算法层面，介绍计算流体力学领域量子算法的构造与验证，及其向高维、非线性问题的拓展路径。最后展望量子计算赋能航天工程应用所面临的潜在挑战与未来发展愿景。',
   },
-  {
+{
     id: 'chen-zhaoyun',
     photo: '/avatars/chen-zhaoyun.webp',
     name: '陈昭昀',
     title: '研究员',
     affiliation: '合肥综合性国家科学中心人工智能研究院',
-    topic: '量子计算流体力学的两个根本性矛盾及统一框架探索',
+    topic: '量子流体力学中的非线性与耗散模拟算法',
     bio: '合肥综合性国家科学中心人工智能研究院研究员，国家重点研发计划青年科学家项目负责人，安徽省科技创新攻坚项目技术总师，CCF 量子计算专委执行委员。2021 年获中国科学技术大学博士学位，主要研究方向为量子科学计算与量子随机访问储存器（QRAM），在 Science Bulletin、CMAME、Physical Review Letters、npj Quantum Information 等期刊发表论文十余篇。曾担任本源量子计算科技（合肥）股份有限公司量子软件部与量子云部技术总监，带领团队获空客（Airbus）量子挑战赛量子 CFD 第一名，为 QPanda、本源量子云平台、VQNet 等量子软件创始人之一。',
     abstract:
       '流体动力学本质上是非线性、耗散的动力学系统，而量子计算基于线性幺正演化，如何在线性幺正框架下模拟非线性非幺正过程，构成了量子计算流体力学面临的两个根本性矛盾。针对非线性问题，变分量子非线性求解器将非线性系统求解转化为全局时空优化任务，通过参数化量子线路直接生成全时空解，从而避免传统迭代格式中的量子态层析；在理想模拟器、量子虚拟机及"本源悟空"超导量子计算机上的实验验证了该方法的可行性，同时揭示了其显著的误差敏感性，引入恰当的辅助损失函数可有效加速训练收敛并抑制误差，固定损失阈值下求解精度随计算规模呈幂律型单调提升。针对非幺正演化问题，提出基于围道积分的矩阵分解框架，将非厄米传播子直接分解为厄米哈密顿量的线性组合，结合特征值平移技术使查询复杂度由谱范数转向谱范围控制，并进一步推广至一般非厄米多项式变换；在此基础上建立统一泊松求和框架，将离散误差重新解释为谱混叠，衍生出 Fourier-PSF 与 Contour-PSF 两条互补路径，分别在分数阶耗散动力学与全纯矩阵函数变换中实现最优复杂度与指数级收敛。',
   },
-  {
+{
     id: 'shi-zhiquan',
     photo: '/avatars/shi-zhiquan.webp',
     name: '石志全',
@@ -184,7 +184,7 @@ export const speakers: Speaker[] = [
     abstract:
       '本报告聚焦中性原子量子计算产业化进展。首先阐述量子计算多技术路线并行发展格局，点明中性原子凭借全同性、高可扩展性、长相干时间成为量子计算"黑马"。随后梳理全球中性原子量子计算在万比特规模化扩展、高保真量子门操控、容错连续运行、架构算法协同等关键技术突破。重点介绍中科酷原的产业化成果，包括"汉原 1 号"商用落地、斩获海外订单，"汉原 2 号"双核架构创新，及在金融、医药等领域的应用探索。同时分析全球产业格局与美国技术布局，指出行业发展机遇与挑战，最后提出中性原子量子计算分阶段发展路线，为我国该领域技术突破与产业落地提供参考。',
   },
-  {
+{
     id: 'lu-zhen',
     photo: '/avatars/lu-zhen.webp',
     name: '卢臻',
@@ -193,9 +193,9 @@ export const speakers: Speaker[] = [
     topic: '基于 Koopman 方法的非线性动力系统端到端量子模拟',
     bio: '北京大学力学与工程科学学院助理研究员，2016 年于清华大学获博士学位。长期从事计算流体力学、湍流燃烧与人工智能方法的交叉研究，近年聚焦流体力学量子计算前沿，围绕量子算法设计、非线性动力学的量子映射、量子硬件噪声建模、智能赋能流体计算等开展系统性工作。已于 JCP、Combustion and Flame、Proc. Combust. Inst.、Phys. Rev. Fluids 等期刊发表论文 30 余篇，获第 41 届国际燃烧大会最佳论文提名奖。',
     abstract:
-      '酉算子的线性特性限制了量子计算在非线性动力系统模拟中的直接应用。本研究提出量子 Koopman 方法（QKM），通过数据驱动的全局线性化突破该限制：基于 Koopman 理论构建非线性动力学的全局线性表示，并通过对角哈密顿量模拟的线性组合将线性演化表示为对角酉算子，进而利用 Walsh-Fourier 变换将其映射为硬件原生的 Rz 门电路。编码器将系统状态映射为量子旋转门参数以制备初态，可学习对角酉算子执行量子演化，解码器将测量结果还原为系统状态；编解码网络与量子门参数通过数据驱动联合优化。在超导量子处理器上针对三维反应扩散、球面浅水波及真实洋流观测开展数值实验，实现等效 320 量子比特规模的量子模拟，验证量子资源随空间自由度对数级缩放的优势。',
+      '酉算子的线性特性限制了量子计算在非线性动力系统模拟中的直接应用。本研究提出量子 Koopman 方法（QKM），通过数据驱动的全局线性化突破该限制，实现非线性动力系统的量子模拟。理论层面，基于 Koopman 理论构建非线性动力学的全局线性表示，并通过对角哈密顿量模拟的线性组合将线性演化表示为对角酉算子，进而利用 Walsh-Fourier 变换将其映射为硬件原生的 Rz 门电路。实现层面，编码器将系统状态映射为量子旋转门参数以制备初态，可学习的对角酉算子执行量子演化，解码器将测量结果还原为系统状态；编解码网络与量子门参数通过数据驱动联合优化。我们在超导量子处理器上针对三维反应扩散、球面浅水波及真实洋流观测开展数值实验，实现等效 320 量子比特规模的量子模拟。结果表明，QKM 能够准确预测复杂时空特征，并在硬件层面验证量子资源随空间自由度对数级缩放的优势。该研究为复杂非线性动力系统的量子模拟提供了可行的线性化框架。',
   },
-  {
+{
     id: 'meng-zhaoyuan',
     photo: '/avatars/meng-zhaoyuan.webp',
     name: '孟昭远',

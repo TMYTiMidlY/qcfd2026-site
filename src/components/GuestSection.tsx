@@ -40,7 +40,7 @@ export function GuestSection() {
               本届会议邀请的院士与资深学者，覆盖量子信息、流体力学与量子计算等方向。
             </p>
           </div>
-          <span className="text-xs text-fg-muted">嘉宾持续更新中</span>
+          <span className="text-xs text-fg-muted">3 位特邀嘉宾</span>
         </div>
 
         <div className="mt-10 grid gap-6 md:grid-cols-3">
