@@ -85,17 +85,15 @@ export function GuestSection() {
               统筹议程、嘉宾邀请与会务联络
             </span>
           </div>
-          <ul className="mt-4 flex flex-wrap gap-2">
+          <ul className="mt-5 flex flex-wrap gap-2.5">
             {conference.committee.map((name) => (
               <li
                 key={name}
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-bg-alt/60 px-3.5 py-1.5 text-sm text-fg-soft"
+                className="group/chip inline-flex items-center gap-2 rounded-full border border-black/[0.06] bg-gradient-to-br from-white to-bg-alt/50 px-3.5 py-1.5 text-sm font-medium text-fg shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-px hover:border-primary/30 hover:text-primary hover:shadow-[0_8px_22px_-14px_rgba(124,58,237,0.45)]"
               >
-                <InitialAvatar
-                  name={name}
-                  size={24}
-                  accent="primary"
-                  className="text-[11px]"
+                <span
+                  aria-hidden
+                  className="size-1.5 rounded-full bg-gradient-to-br from-primary to-secondary shadow-[0_0_0_3px_rgba(124,58,237,0.08)] transition group-hover/chip:shadow-[0_0_0_3px_rgba(124,58,237,0.18)]"
                 />
                 {name}
               </li>
