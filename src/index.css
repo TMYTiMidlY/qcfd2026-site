@@ -145,6 +145,37 @@
   text-shadow: 0 2px 24px rgba(15, 23, 42, 0.10);
 }
 
+@utility mask-fade-bottom-strong {
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 70%, transparent 100%);
+          mask-image: linear-gradient(180deg, black 0%, black 70%, transparent 100%);
+}
+
+@utility mask-fade-bottom-soft {
+  -webkit-mask-image: linear-gradient(180deg, black 0%, black 85%, transparent 100%);
+          mask-image: linear-gradient(180deg, black 0%, black 85%, transparent 100%);
+}
+
+@utility mask-fade-radial {
+  -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 90%);
+          mask-image: radial-gradient(ellipse at center, black 50%, transparent 90%);
+}
+
+@utility mask-fade-x {
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
+          mask-image: linear-gradient(90deg, transparent, black 20%, black 80%, transparent);
+}
+
+@utility mask-fade-edges-soft {
+  -webkit-mask-image:
+    linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%),
+    linear-gradient(180deg, black 0%, black 85%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%),
+    linear-gradient(180deg, black 0%, black 85%, transparent 100%);
+          mask-composite: intersect;
+}
+
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.04); }

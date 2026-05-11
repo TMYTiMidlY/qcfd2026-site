@@ -372,7 +372,87 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 ---
 
 
-## 八、常见问题
+## 八、Codex MCP 集成（让 Copilot 把活转给 Codex）
+
+Copilot CLI 自己只能跑一种 host model（默认 Sonnet 4.5 / 也能切到 GPT-5），但 OpenAI 自家的 `codex` CLI 内置了 **hosted 工具**——尤其是 `image_generation`——这些是 host model 拿不到的能力。把 `codex` 暴露成 MCP server 挂到 Copilot 上，就能在一个 Copilot 会话里**让 codex 当 subagent 干活**：生图、长 review、换 reasoning effort、独立 thread 等。
+
+为什么不用 OpenAI 官方的 `openai/codex-plugin-cc`（Claude Code plugin）：那个 plugin 重度依赖 Claude 专有的 `Agent` subagent / `AskUserQuestion` / `Stop` hook，Copilot CLI 虽然能识别 `.claude-plugin` 目录，但兼容性碎（参考 issues `github/copilot-cli#1996 / #2133 / #3238`），现实里跑不出 Claude Code 那种体验。MCP 这条路反而最干净——`codex mcp-server` 暴露 `codex` 和 `codex-reply` 两个 tool，标准 MCP，session 用 `threadId` 续接。
+
+### 8.1 一次性准备
+
+1. 装 codex CLI 并用 ChatGPT 账号登录（**必须 ChatGPT 登录**，hosted `image_generation` 在 API key 模式下会被 codex backend 关掉）：
+   ```bash
+   npm install -g @openai/codex
+   codex login              # 走浏览器选 ChatGPT 账号
+   cat ~/.codex/auth.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["auth_mode"])'
+   # 期望输出：chatgpt
+   ```
+
+2. 探一下 MCP 工具面（可选，确认 server 起得来）：
+   ```bash
+   printf '%s\n' \
+     '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"x","version":"1"}}}' \
+     '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+     '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+     | timeout 10 codex mcp-server | head -2
+   # 应看到 serverInfo: codex-mcp-server，tools 列表里有 codex / codex-reply
+   ```
+
+### 8.2 MCP 配置
+
+挂在哪一层取决于你想让谁用。本仓库的取舍是 **workspace + project 双写、user scope 不动**：
+
+```jsonc
+// ~/TiMidlY-projects/.mcp.json (Workspace scope，所有 TiMidlY 子项目)
+// ~/TiMidlY-projects/qcfd2026-site/.mcp.json (Project scope，本仓库)
+"codex": {
+  "type": "local",
+  "command": "codex",
+  "args": ["mcp-server"],
+  "timeout": 300000
+}
+```
+
+> Copilot 按 server 名字 dedup，project 那份会覆盖 workspace 同名条目；都不写也不会缺什么——克隆这个仓库的人按 README 装一遍 codex CLI 后就直接拿到 MCP，**不需要他改自己的 `~/.copilot/mcp-config.json`**。在 `/mcp` 显示里 user-level 的 server 单列在顶上，workspace 的归在 `Workspace:` 段——所以如果你看到 codex 出现在顶上单独一栏，说明你确实在 user scope 也写了一份，本仓库不依赖那一份。
+
+**`timeout` 字段**：MCP server 配置顶层支持 `timeout`（毫秒），覆盖 Copilot client 默认的 60s 调用超时。生图通常 60-120s，调到 300000（5 分钟）留足余量。这是 client 等响应的 timeout，不是 server 进程的——server 一直在跑。
+
+### 8.3 用法
+
+在 Copilot 会话里直接说"让 codex 画 XX"或"用 codex tool 跑 XX"，host model 就会调 MCP `codex` / `codex-reply` 工具。命令行 dry-run：
+
+```bash
+# 直接走子进程（不经 MCP）端到端验证 hosted image_generation 可用
+mkdir -p /tmp/codex-imgtest && cd /tmp/codex-imgtest
+codex exec --sandbox workspace-write --skip-git-repo-check \
+  "Use your built-in image_generation tool to create a 1024x1024 PNG: <你的 prompt>. Save bytes to ./out.png."
+```
+
+成功的话 `out.png` 会落盘——codex 自己 model 决定调用 `image_generation` 这个 hosted tool（Responses API 那一侧返回 base64），然后用 shell/Node 写入文件。**不是 codex 现写 Python 调 `images.generate`**——hosted tool 由 OpenAI 后端直跑，token 用量大概 30-50k 一张图。
+
+### 8.4 已知坑
+
+| 现象 | 原因 / 处理 |
+|---|---|
+| `MCP error -32001: Request timed out` | 默认 60s 超时不够生图用。本仓库已在 `.mcp.json` 给 codex 加 `"timeout": 300000`（5 分钟）。如果还是超，**server 端通常已跑完了**，文件会出现在目标路径，只是响应丢了——临时看图直接 `view` 文件即可 |
+| `image_generation` 没触发 | 检查 `~/.codex/auth.json` 的 `auth_mode` 是不是 `chatgpt`；API key 模式下这个 hosted tool 被 codex backend 关掉 |
+| 改了 `.mcp.json` 但 `/mcp` 没看到新 server | Copilot 启动时锁定 MCP 列表。`/restart` 或重开 `copilot` |
+| codex 进程残留 | `ps -ef | grep codex mcp-server` 确认，会话退出后通常会自动收。手动清用 `kill <pid>`（本仓库约定不允许 `pkill`/`killall`） |
+| 想给 codex 换更便宜的 model | MCP `codex` tool 的 input 接 `model` 字段；或在 `~/.codex/config.toml` 写 `model = "gpt-5.4-mini"` 全局降档 |
+
+### 8.5 适用场景
+
+| 场景 | 这条路 vs 其他 |
+|---|---|
+| 生图 / 编辑图 | 唯一可行路径（host model 没这能力）|
+| 让 codex 用 GPT-5 系做长 review、自己再用 Sonnet 接力总结 | 比直接 `/model` 切换更灵活，可保留两条独立 thread |
+| 多轮迭代同一个 codex 上下文 | 用 `codex-reply` 带 `threadId`，session 状态在 codex 进程里维护 |
+| 仅仅想让 codex 跑一段命令并拿结果 | 直接 `!codex exec ...` 更轻；MCP 适合需要带回结构化结果或多轮的场景 |
+
+---
+
+
+## 九、常见问题
 
 | 现象 | 原因 / 解决 |
 |---|---|
@@ -384,6 +464,6 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 
 ---
 
-## 九、License
+## 十、License
 
 待定（议程内部使用，暂不开源）。

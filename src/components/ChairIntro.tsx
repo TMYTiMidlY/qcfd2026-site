@@ -15,11 +15,7 @@ export function ChairIntro() {
           </p>
         </div>
 
-        <article className="mt-10 card-surface relative overflow-hidden">
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent"
-            aria-hidden
-          />
+        <article className="mt-10 card-surface">
           <div className="grid gap-8 p-7 md:grid-cols-[auto_1fr] md:gap-10 md:p-10">
             <div className="flex flex-col items-center gap-4 md:items-start">
               <img

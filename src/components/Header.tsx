@@ -38,9 +38,14 @@ export function Header() {
     >
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <a href="#home" className="flex items-center gap-2.5 group">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-white font-bold shadow-lg shadow-primary/25 transition group-hover:shadow-primary/40">
-            Q
-          </span>
+          <img
+            src="/generated/qcfd-logo.png"
+            alt="QCFD"
+            width={36}
+            height={36}
+            decoding="async"
+            className="size-9 rounded-xl object-cover shadow-lg shadow-primary/25 transition group-hover:shadow-primary/40"
+          />
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-fg">
               {conference.shortName}

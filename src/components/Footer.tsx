@@ -7,9 +7,14 @@ export function Footer() {
       <div className="container-page">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-white font-bold">
-              Q
-            </span>
+            <img
+              src="/generated/qcfd-logo.png"
+              alt="QCFD"
+              width={56}
+              height={56}
+              decoding="async"
+              className="size-14 rounded-2xl object-cover shadow-lg shadow-primary/25"
+            />
             <h3 className="mt-4 text-lg font-semibold text-fg">
               {conference.name}
             </h3>
