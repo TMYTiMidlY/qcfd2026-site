@@ -1,7 +1,8 @@
-import { Award, Building2, Users } from 'lucide-react'
+import { Award, Building2 } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { guests } from '@/data/speakers'
 import { InitialAvatar } from '@/components/SpeakerCard'
+import { Badge } from '@/components/ui/badge'
 
 function GuestAvatar({
   src,
@@ -77,60 +78,29 @@ export function GuestSection() {
           ))}
         </div>
 
-        <div className="relative mt-12 card-surface overflow-hidden p-6 sm:p-8">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(45% 60% at 15% 20%, color-mix(in oklab, var(--color-primary) 14%, transparent), transparent 65%), radial-gradient(45% 60% at 85% 85%, color-mix(in oklab, var(--color-secondary) 12%, transparent), transparent 65%)',
-            }}
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-secondary/50 to-transparent"
-          />
-          <div className="relative">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-fg">
-              <Users className="size-4 text-primary" />
-              <h3 className="text-base font-semibold">组织委员会</h3>
-              <span className="text-xs text-fg-muted">
-                统筹议程、嘉宾邀请与会务联络
-              </span>
-            </div>
-            <ul className="mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-x-4 gap-y-7 sm:grid-cols-3 md:grid-cols-5 md:gap-x-2">
-              {conference.committee.map((name, i) => (
-                <li
-                  key={name}
-                  className="group/m flex flex-col items-center gap-3 text-center"
-                >
-                  <span className="relative grid place-items-center">
-                    <span
-                      aria-hidden
-                      className="absolute inset-[-14px] rounded-full bg-gradient-to-br from-primary/45 to-secondary/45 opacity-90 blur-xl transition-opacity duration-500 group-hover/m:opacity-100"
-                      style={{
-                        animation: 'pulse-glow 5s ease-in-out infinite',
-                        animationDelay: `${i * 0.6}s`,
-                      }}
-                    />
-                    <span
-                      aria-hidden
-                      className="absolute inset-[-3px] rounded-full ring-1 ring-primary/20"
-                    />
-                    <InitialAvatar
-                      name={name}
-                      size={56}
-                      accent={i % 2 === 0 ? 'primary' : 'secondary'}
-                      className="relative shadow-md ring-2 ring-white/95"
-                    />
-                  </span>
-                  <span className="text-sm font-medium text-fg transition group-hover/m:text-primary">
-                    {name}
-                  </span>
-                </li>
-              ))}
-            </ul>
+        <div className="mt-14">
+          <div className="mb-4 flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="h-4 w-[3px] rounded-full bg-gradient-to-b from-primary to-secondary"
+            />
+            <span className="text-sm font-semibold text-fg">组织委员会</span>
           </div>
+          <ul className="flex flex-wrap gap-2">
+            {conference.committee.map((name) => (
+              <li key={name}>
+                <Badge
+                  variant="secondary"
+                  className="bg-bg-alt px-3 py-1 text-sm font-normal text-fg ring-1 ring-inset ring-fg/8 transition hover:bg-primary/10 hover:text-primary hover:ring-primary/20"
+                >
+                  {name}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-fg-muted">
+            统筹议程、嘉宾邀请与会务联络
+          </p>
         </div>
       </div>
     </section>
