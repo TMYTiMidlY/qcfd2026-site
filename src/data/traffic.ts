@@ -1,75 +1,119 @@
 /**
  * 交通指南
- * 出处：详见 SOURCES.md §9
- *
- * 上一版（仅 4 张空骨架卡 + 单按钮）保守过头：所有距离/时长/费用/地铁/机场大巴
- * 都是从公开资料可查的，本版查百度百科、Wikipedia 合肥地铁词条等补回。
- *
- * 数据查询日期：2026-05-10
+ * 出处：会务组提供的官方《合肥翡翠湖迎宾馆会议交通指南》（2026-05-11）
  *
  * 关键背景：
- *   - 翡翠湖迎宾馆位于翡翠路与望江西路交口（蜀山区）
- *   - 离最近地铁站「工大翡翠湖校区」（合肥地铁 3 号线）步行约 10-15 分钟
- *   - S1 线（机场专线）正在建设中，会议期间（2026 年 5 月）尚未投入使用
- *
- * 距离/时长/费用为公开资料综合估算，仅供参考；实际请以地图 App 实时查询为准
+ *   - 翡翠湖迎宾馆位于合肥市蜀山区容成路 1 号（翡翠路与望江西路交口附近）
+ *   - 离最近地铁站「工大翡翠湖校区」（合肥地铁 3 号线）出站后可步行或换 607 路
+ *   - 时长 / 里程 / 费用为平峰估算，仅供参考
  */
+
+export type TrafficMetric = { label: string; value: string }
+
+export type TrafficSubMode = {
+  type: 'metro' | 'taxi' | 'mixed'
+  label: string
+  route: string
+  metrics?: TrafficMetric[]
+  tip?: string
+}
+
 export type TrafficInfo = {
   origin: string
-  distance: string
-  duration: string
-  notes: string[]
+  shortName?: string
+  icon: 'plane' | 'train-front' | 'train'
   amapKeyword: string
-  icon: 'plane' | 'train-front' | 'train' | 'car'
+  subModes: TrafficSubMode[]
 }
 
 export const traffic: TrafficInfo[] = [
   {
-    origin: '合肥新桥国际机场（HFE）',
-    distance: '约 38-42 km',
-    duration: '驾车约 50-65 分钟',
-    notes: [
-      '出租 / 网约车：约 ¥100-150（高峰期可能更高）',
-      '机场大巴四号线途经天鹅湖大酒店、黄山路皇冠假日、十里庙，可在十里庙下车后打车约 10 分钟到达',
-      '⚠️ 地铁 S1 机场专线（合肥轨道交通 S1 号线）正在建设中，会议期间尚未开通',
-    ],
-    amapKeyword: '合肥新桥国际机场到合肥翡翠湖迎宾馆',
-    icon: 'plane',
-  },
-  {
-    origin: '合肥南站（高铁主站）',
-    distance: '约 20-25 km',
-    duration: '驾车约 30-45 分钟',
-    notes: [
-      '出租 / 网约车：约 ¥40-60',
-      '地铁：4 号线 → 图书馆站换乘 3 号线 → 工大翡翠湖校区站，全程约 35-50 分钟，下车步行约 10-15 分钟',
-    ],
-    amapKeyword: '合肥南站到合肥翡翠湖迎宾馆',
+    origin: '合肥南站',
+    shortName: '高铁主站',
     icon: 'train-front',
+    amapKeyword: '合肥南站到合肥翡翠湖迎宾馆',
+    subModes: [
+      {
+        type: 'metro',
+        label: '地铁出行',
+        route:
+          '合肥南站乘坐轨道交通 4 号线（青龙岗方向），至图书馆站换乘轨道交通 3 号线（幸福坝方向），至工大翡翠湖校区站下车；出站后步行至公交站换乘 607 路公交，至丹翡路口站下车，步行约 5 分钟抵达酒店。',
+      },
+      {
+        type: 'taxi',
+        label: '打车出行',
+        route: '直接导航搜索"合肥翡翠湖迎宾馆"，途经龙川路、容成路，路线顺畅。',
+        metrics: [
+          { label: '里程', value: '约 11.9 km' },
+          { label: '时长', value: '平峰 25-30 min · 高峰 35-40 min' },
+          { label: '费用', value: '¥25-30' },
+        ],
+        tip: '常规网约车 / 出租车均可，无高速费。',
+      },
+    ],
   },
   {
-    origin: '合肥站（合肥老火车站）',
-    distance: '约 12-16 km',
-    duration: '驾车约 25-35 分钟',
-    notes: [
-      '出租 / 网约车：约 ¥25-45',
-      '地铁：3 号线一站直达，至工大翡翠湖校区站约 50-60 分钟（站点较多，打车通常更快）',
-    ],
-    amapKeyword: '合肥站到合肥翡翠湖迎宾馆',
+    origin: '合肥站',
+    shortName: '合肥老火车站',
     icon: 'train',
+    amapKeyword: '合肥站到合肥翡翠湖迎宾馆',
+    subModes: [
+      {
+        type: 'metro',
+        label: '地铁出行',
+        route:
+          '合肥火车站乘坐轨道交通 3 号线（幸福坝方向），至工大翡翠湖校区站下车；出站后步行至公交站换乘 607 路公交，至丹翡路口站下车，步行约 5 分钟抵达酒店。',
+        metrics: [{ label: '时长', value: '约 1 小时 9 分钟' }],
+      },
+      {
+        type: 'taxi',
+        label: '打车出行',
+        route: '途经北一环路、南二环路、容成路，避开拥堵路段更省时。',
+        metrics: [
+          { label: '里程', value: '约 23.6 km' },
+          { label: '时长', value: '平峰 30-35 min · 高峰 40-45 min' },
+          { label: '费用', value: '¥35-40' },
+        ],
+        tip: '常规网约车 / 出租车均可，无高速费。',
+      },
+    ],
   },
   {
-    origin: '市区自驾',
-    distance: '—',
-    duration: '—',
-    notes: [
-      '导航关键词：翡翠湖迎宾馆 3 号楼',
-      '具体路线与停车安排请以地图 App 与会场现场指引为准',
+    origin: '合肥新桥国际机场',
+    shortName: 'HFE',
+    icon: 'plane',
+    amapKeyword: '合肥新桥国际机场到合肥翡翠湖迎宾馆',
+    subModes: [
+      {
+        type: 'mixed',
+        label: '地铁 + 巴士',
+        route:
+          '新桥国际机场乘坐机场巴士 1 号线，至西七里塘站下车，换乘轨道交通 3 号线（幸福坝方向），至工大翡翠湖校区站下车；出站后步行至公交站换乘 607 路公交，至丹翡路口站下车，步行约 5 分钟抵达酒店。',
+        metrics: [
+          { label: '时长', value: '约 1 小时 52 分钟' },
+          { label: '费用', value: '约 ¥30（机场巴士 + 地铁）' },
+        ],
+      },
+      {
+        type: 'taxi',
+        label: '打车出行',
+        route: '走机场高速、方兴大道快速路，直达酒店，是机场出行最便捷方式。',
+        metrics: [
+          { label: '里程', value: '约 38 km' },
+          { label: '时长', value: '平峰 35-40 min · 高峰 45-50 min' },
+          { label: '费用', value: '¥60-70（含机场高速通行费 ¥10）' },
+        ],
+      },
     ],
-    amapKeyword: '合肥翡翠湖迎宾馆',
-    icon: 'car',
   },
 ]
+
+export const trafficNotes: string[] = [
+  '以上打车费用为平峰时段预估，早晚高峰、夜间或节假日费用可能略有上浮，仅供参考。',
+  '地铁 / 公交出行建议预留充足时间，避免因换乘、候车耽误行程；携带大件行李推荐选择打车方式，更便捷省心。',
+]
+
+export const venueAddress = '合肥市蜀山区容成路 1 号 · 翡翠湖迎宾馆'
 
 /**
  * 合肥 5 月气候均值
