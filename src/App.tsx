@@ -1,5 +1,6 @@
 import { Header } from '@/components/Header'
 import { Hero } from '@/components/Hero'
+import { ChairIntro } from '@/components/ChairIntro'
 import { GuestSection } from '@/components/GuestSection'
 import { TopicGrid } from '@/components/TopicGrid'
 import { SpeakerGrid } from '@/components/SpeakerCard'
@@ -16,6 +17,7 @@ export default function App() {
       <Header />
       <main>
         <Hero />
+        <ChairIntro />
         <GuestSection />
         <TopicGrid />
         <SpeakerGrid />

@@ -126,6 +126,12 @@ export function Hero() {
               承办：<span className="text-fg-soft">{conference.host}</span>
             </span>
             <span>
+              协办：
+              <span className="text-fg-soft">
+                {conference.coOrganizers.join('、')}
+              </span>
+            </span>
+            <span>
               会议主席：<span className="text-fg-soft">{conference.chair}</span>
             </span>
           </div>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 
 const navLinks = [
   { href: '#home', label: '首页' },
+  { href: '#chair', label: '大会主席' },
   { href: '#guests', label: '特邀嘉宾' },
   { href: '#topics', label: '议题方向' },
   { href: '#speakers', label: '特邀报告' },

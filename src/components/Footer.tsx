@@ -24,6 +24,12 @@ export function Footer() {
                 承办：<span className="text-fg-soft">{conference.host}</span>
               </p>
               <p>
+                协办：
+                <span className="text-fg-soft">
+                  {conference.coOrganizers.join('、')}
+                </span>
+              </p>
+              <p>
                 会议主席：<span className="text-fg-soft">{conference.chair}</span>
                 {' · '}
                 组委会：

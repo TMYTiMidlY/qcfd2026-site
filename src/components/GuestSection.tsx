@@ -1,4 +1,5 @@
-import { Award, Building2 } from 'lucide-react'
+import { Award, Building2, Users } from 'lucide-react'
+import { conference } from '@/data/conference'
 import { guests } from '@/data/speakers'
 import { InitialAvatar } from '@/components/SpeakerCard'
 
@@ -74,6 +75,32 @@ export function GuestSection() {
               ) : null}
             </article>
           ))}
+        </div>
+
+        <div className="mt-12 card-surface p-6 sm:p-7">
+          <div className="flex flex-wrap items-center gap-2 text-fg">
+            <Users className="size-4 text-primary" />
+            <h3 className="text-base font-semibold">组织委员会</h3>
+            <span className="text-xs text-fg-muted">
+              统筹议程、嘉宾邀请与会务联络
+            </span>
+          </div>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {conference.committee.map((name) => (
+              <li
+                key={name}
+                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-bg-alt/60 px-3.5 py-1.5 text-sm text-fg-soft"
+              >
+                <InitialAvatar
+                  name={name}
+                  size={24}
+                  accent="primary"
+                  className="text-[11px]"
+                />
+                {name}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
