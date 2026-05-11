@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy:ssh": "bun run build && rsync -avz --delete dist/ ${DEPLOY_HOST:?need DEPLOY_HOST}:/tmp/qcfd2026-dist/ && ssh -t $DEPLOY_HOST \"sudo rsync -a --delete /tmp/qcfd2026-dist/ ${DEPLOY_WEBROOT:?need DEPLOY_WEBROOT}/ && sudo chown -R www-data:www-data $DEPLOY_WEBROOT\""
+    "preview": "vite preview"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

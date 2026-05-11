@@ -180,12 +180,34 @@ pixi run bunx --bun shadcn@latest add <component> -y
 
 ### 方案 B：自有 nginx 服务器
 
-最简流程：
-
 ```bash
 pixi run bun run build
+```
+
+输出在 `dist/`。按 web 根目录权限分两种推送方式。
+
+**情况 1：web 根 owner 是当前 SSH 用户**
+
+```bash
 rsync -avz --delete dist/ <user>@<host>:/var/www/<domain>/html/
 ```
+
+**情况 2：web 根 owner 是 `www-data`（更常见）**
+
+普通用户没法直接 rsync 进 `/var/www/`，拆三步——本地 rsync 到远端 `/tmp/`，远端 sudo rsync 落 web 根，再把 owner 还回去：
+
+```bash
+# 1) 推到远端 /tmp（无 sudo）
+rsync -avz --delete dist/ <user>@<host>:/tmp/qcfd2026-dist/
+
+# 2) -t 分配 PTY 让 sudo 能弹密码，落到 web 根
+ssh -t <user>@<host> "sudo rsync -a --delete /tmp/qcfd2026-dist/ /var/www/<domain>/html/"
+
+# 3) owner 还给 www-data
+ssh -t <user>@<host> "sudo chown -R www-data:www-data /var/www/<domain>/html"
+```
+
+要免密可在 sudoers 给当前用户加 `NOPASSWD: /usr/bin/rsync, /usr/bin/chown`，第 2、3 步就能合成一条非交互命令。
 
 最小可用 nginx 配置：
 
@@ -203,22 +225,9 @@ server {
 
 > 几点小坑：
 > - Ubuntu 自带的 `/etc/nginx/nginx.conf` 默认 `gzip on` 但 `gzip_types` 那行被注释掉了，结果只压 HTML 不压 JS/CSS。要么取消那段注释，要么在站点 `server { ... }` 里再写一遍 `gzip_types text/css application/javascript image/svg+xml ...`。
-> - 站点目录 owner 一般是 `www-data`，普通用户 rsync 不进去；常见做法是先推到 `~/` 或 `/tmp/`，再 `sudo rsync` 落到 `/var/www/`。
 > - 想给 vite 出来的带 hash 资源加长缓存：`location ~* ^/assets/ { expires 1y; add_header Cache-Control "public, immutable"; }`，配合 `location = /index.html { add_header Cache-Control "no-cache"; }` 让发版立即生效。
 
-### 方案 C：脚本化推送（任何 nginx-like 服务器）
-
-仓库提供了 `deploy:ssh` 脚本，把 build + rsync + 远端 sudo rsync 打包成一条命令，靠两个环境变量配置：
-
-```bash
-export DEPLOY_HOST=myserver               # ~/.ssh/config 别名 或 user@host
-export DEPLOY_WEBROOT=/var/www/<domain>/html
-pixi run bun run deploy:ssh
-```
-
-适合 web 根 owner 是 `www-data`、需要 `sudo` 落盘的场景；执行时会提示一次远端 sudo 密码。要免密可在 sudoers 给当前用户加 `NOPASSWD: /usr/bin/rsync, /usr/bin/chown`。
-
-### 方案 D：Caddy（自动 HTTPS）
+### 方案 C：Caddy（自动 HTTPS）
 
 ```caddy
 <domain> {
@@ -231,13 +240,26 @@ pixi run bun run deploy:ssh
 }
 ```
 
-### 方案 E：GitHub Pages
+### 方案 D：GitHub Pages
 
 仓库 Settings → Pages → Source 选 GitHub Actions；workflow 装 bun → `bun install && bun run build` → 把 `dist` 推 `gh-pages` 分支。
 
-### 方案 F：临时通过 SSH 反向隧道暴露
+### 方案 E：临时通过 SSH 反向隧道暴露
 
-适合 demo 或临时分享，本机起 `vite preview`，再 `ssh -R` 转给跳板机。详见本仓库 `dev` 部分的 `--host` 用法。
+适合 demo / 临时分享：本机起 `vite preview`，再用 `ssh -R` 把本机端口反向映射到一台有公网 IP 的跳板机上。
+
+```bash
+# 1) 本机起预览（vite preview 默认 127.0.0.1:4173）
+pixi run bun run preview
+
+# 2) 把跳板机的 :8000 反向映射到本机 :4173
+#    -N 不开 shell，纯转发；保持前台运行
+ssh -N -R 8000:127.0.0.1:4173 <user>@<jumphost>
+```
+
+跳板机上随后用 nginx / Caddy 把某条 `location` 反代到自己的 `127.0.0.1:8000` 即可对外。要让 `ssh -R` 监听跳板机的 `0.0.0.0`（而不只是它的 loopback），需在跳板机 `/etc/ssh/sshd_config` 设 `GatewayPorts yes` 并重启 sshd——一般通过 nginx 反代更安全，不必直接开放。
+
+> 这跟 `vite dev --host` 是两回事：`--host` 只是让本机 vite 监听 `0.0.0.0`，方便同局域网设备访问，不会自动穿到公网。
 
 ---
 
