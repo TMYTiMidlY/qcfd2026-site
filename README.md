@@ -171,36 +171,71 @@ pixi run bunx --bun shadcn@latest add <component> -y
 
 ## 六、部署
 
-`bun run build` 输出 `dist/`，约 60 KB CSS（gzip 10）+ 311 KB JS（gzip 102），是**纯静态资源**，丢哪都行。
+`bun run build` 输出 `dist/`，是**纯静态资源**（HTML + 哈希化的 JS/CSS + 图片字体），任何静态托管都能跑。
 
 ### 方案 A：Cloudflare Pages / Vercel / Netlify（推荐）
 
 - 推 GitHub → 连接平台 → 构建命令 `bun install && bun run build`，输出目录 `dist`
 - 自动 HTTPS、全球 CDN、PR Preview、自定义域名
 
-### 方案 B：自有服务器 (nginx / Caddy)
+### 方案 B：自有 nginx 服务器
+
+最简流程：
 
 ```bash
 pixi run bun run build
-rsync -avz --delete dist/ user@host:/var/www/qcfd2026/
+rsync -avz --delete dist/ <user>@<host>:/var/www/<domain>/html/
 ```
 
-nginx 配置：
+最小可用 nginx 配置：
 
 ```nginx
 server {
-  server_name qcfd2026.example.com;
-  root /var/www/qcfd2026;
+  listen 80;
+  server_name <domain>;
+  root /var/www/<domain>/html;
   index index.html;
   location / { try_files $uri $uri/ /index.html; }
 }
 ```
 
-### 方案 C：GitHub Pages
+跑一次 `certbot --nginx -d <domain> --redirect` 即可拿到 Let's Encrypt 证书并自动加上 80→443 跳转，续期由 `certbot.timer` 自动处理。
+
+> 几点小坑：
+> - Ubuntu 自带的 `/etc/nginx/nginx.conf` 默认 `gzip on` 但 `gzip_types` 那行被注释掉了，结果只压 HTML 不压 JS/CSS。要么取消那段注释，要么在站点 `server { ... }` 里再写一遍 `gzip_types text/css application/javascript image/svg+xml ...`。
+> - 站点目录 owner 一般是 `www-data`，普通用户 rsync 不进去；常见做法是先推到 `~/` 或 `/tmp/`，再 `sudo rsync` 落到 `/var/www/`。
+> - 想给 vite 出来的带 hash 资源加长缓存：`location ~* ^/assets/ { expires 1y; add_header Cache-Control "public, immutable"; }`，配合 `location = /index.html { add_header Cache-Control "no-cache"; }` 让发版立即生效。
+
+### 方案 C：脚本化推送（任何 nginx-like 服务器）
+
+仓库提供了 `deploy:ssh` 脚本，把 build + rsync + 远端 sudo rsync 打包成一条命令，靠两个环境变量配置：
+
+```bash
+export DEPLOY_HOST=myserver               # ~/.ssh/config 别名 或 user@host
+export DEPLOY_WEBROOT=/var/www/<domain>/html
+pixi run bun run deploy:ssh
+```
+
+适合 web 根 owner 是 `www-data`、需要 `sudo` 落盘的场景；执行时会提示一次远端 sudo 密码。要免密可在 sudoers 给当前用户加 `NOPASSWD: /usr/bin/rsync, /usr/bin/chown`。
+
+### 方案 D：Caddy（自动 HTTPS）
+
+```caddy
+<domain> {
+    root * /var/www/<domain>/html
+    file_server
+    encode gzip zstd
+    @assets path /assets/*
+    header @assets Cache-Control "public, max-age=31536000, immutable"
+    header /index.html Cache-Control "no-cache, no-store, must-revalidate"
+}
+```
+
+### 方案 E：GitHub Pages
 
 仓库 Settings → Pages → Source 选 GitHub Actions；workflow 装 bun → `bun install && bun run build` → 把 `dist` 推 `gh-pages` 分支。
 
-### 方案 D：临时通过 SSH 反向隧道暴露
+### 方案 F：临时通过 SSH 反向隧道暴露
 
 适合 demo 或临时分享，本机起 `vite preview`，再 `ssh -R` 转给跳板机。详见本仓库 `dev` 部分的 `--host` 用法。
 
