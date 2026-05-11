@@ -5,7 +5,9 @@
  */
 export type ScheduleDay = {
   date: string
+  shortDate: string
   weekday: string
+  shortWeekday: string
   label: string
   items: { time?: string; title: string; note?: string }[]
 }
@@ -13,7 +15,9 @@ export type ScheduleDay = {
 export const schedule: ScheduleDay[] = [
   {
     date: '5月22日',
+    shortDate: '5/22',
     weekday: '星期五',
+    shortWeekday: '周五',
     label: '会议报到',
     items: [
       { time: '全天', title: '参会代表报到', note: '合肥翡翠湖迎宾馆 3 号楼' },
@@ -21,7 +25,9 @@ export const schedule: ScheduleDay[] = [
   },
   {
     date: '5月23日',
+    shortDate: '5/23',
     weekday: '星期六',
+    shortWeekday: '周六',
     label: '学术会议',
     items: [
       { title: '学术会议', note: '具体时段、报告顺序与休息安排请以第二轮通知为准' },
@@ -29,7 +35,9 @@ export const schedule: ScheduleDay[] = [
   },
   {
     date: '5月24日',
+    shortDate: '5/24',
     weekday: '星期日',
+    shortWeekday: '周日',
     label: '参观与离会',
     items: [
       { title: '参观、离会', note: '具体安排另行通知' },

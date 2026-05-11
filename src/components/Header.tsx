@@ -73,8 +73,14 @@ export function Header() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            aria-label="菜单"
-            className="grid size-10 place-items-center rounded-full text-fg lg:hidden hover:bg-primary/10"
+            aria-label={open ? '关闭菜单' : '打开菜单'}
+            aria-expanded={open}
+            className={cn(
+              'grid size-10 place-items-center rounded-full transition lg:hidden',
+              open
+                ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
+                : 'text-fg hover:bg-primary/10',
+            )}
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -82,26 +88,34 @@ export function Header() {
       </div>
 
       {open ? (
-        <div className="lg:hidden border-t border-black/5 bg-white/95 backdrop-blur-xl">
-          <nav className="container-page flex flex-col gap-1 py-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm text-fg-soft hover:bg-primary/10 hover:text-primary"
-              >
-                {link.label}
-              </a>
-            ))}
-            <Button asChild size="sm" className="mt-2 w-full">
-              <a href={conference.registrationUrl} target="_blank" rel="noreferrer">
-                会议注册
-                <ExternalLink className="size-4" />
-              </a>
-            </Button>
-          </nav>
-        </div>
+        <>
+          <button
+            type="button"
+            aria-label="关闭菜单"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 top-16 z-40 bg-fg/30 backdrop-blur-[2px] lg:hidden"
+          />
+          <div className="lg:hidden relative z-50 border-t border-black/5 bg-white/95 backdrop-blur-xl shadow-lg">
+            <nav className="container-page flex flex-col gap-1 py-4">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-sm text-fg-soft hover:bg-primary/10 hover:text-primary"
+                >
+                  {link.label}
+                </a>
+              ))}
+              <Button asChild size="sm" className="mt-2 w-full">
+                <a href={conference.registrationUrl} target="_blank" rel="noreferrer">
+                  会议注册
+                  <ExternalLink className="size-4" />
+                </a>
+              </Button>
+            </nav>
+          </div>
+        </>
       ) : null}
     </header>
   )

@@ -103,7 +103,7 @@
 }
 
 @utility section-pad {
-  padding-block: clamp(3rem, 8vw, 7rem);
+  padding-block: clamp(2.25rem, 7vw, 7rem);
 }
 
 @utility container-page {

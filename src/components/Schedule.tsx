@@ -20,21 +20,26 @@ export function Schedule() {
           </p>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-2">
+        <div className="mt-10 flex w-full gap-1.5 sm:flex-wrap sm:gap-2">
           {schedule.map((d, idx) => (
             <button
               key={d.date}
               onClick={() => setActive(idx)}
               className={cn(
-                'rounded-full border px-5 py-2.5 text-sm font-medium transition',
+                'flex-1 rounded-full border px-2 py-2 text-xs font-medium transition sm:flex-none sm:px-5 sm:py-2.5 sm:text-sm',
                 idx === active
                   ? 'border-primary bg-primary text-white shadow-lg shadow-primary/25'
                   : 'border-black/10 bg-white text-fg-soft hover:border-primary/40 hover:text-primary',
               )}
             >
-              <span className="inline-flex items-center gap-2">
-                <Calendar className="size-3.5" />
-                {d.date} · {d.weekday}
+              <span className="inline-flex items-center justify-center gap-1 whitespace-nowrap sm:gap-2">
+                <Calendar className="size-3 shrink-0 sm:size-3.5" />
+                <span className="sm:hidden">
+                  {d.shortDate} {d.shortWeekday}
+                </span>
+                <span className="hidden sm:inline">
+                  {d.date} · {d.weekday}
+                </span>
               </span>
             </button>
           ))}

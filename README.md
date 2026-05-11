@@ -241,7 +241,73 @@ pixi run bun run deploy:ssh
 
 ---
 
-## 七、常见问题
+## 七、Playwright 截图自检（MCP / 无 sudo 环境）
+
+仓库已经把 Playwright 浏览器跑通需要的 13 个 Linux 系统库（`gtk3 / nspr / nss / libcups / libgbm / libdrm / libxcomposite / libxdamage / libxrandr / at-spi2-core / alsa-lib / pulseaudio-client / dbus`）放进了 `pixi.toml`，并提供 `scripts/chromium-wrapper.sh` 让 Playwright 自带的 Chromium 二进制 **加载 pixi 环境里的 .so 而不是系统 `/usr/lib`**。这样在没有 root 权限的机器上，Copilot 也能调用 Playwright MCP 给本地站截图。
+
+### 7.1 一次性准备（克隆仓库后做一次）
+
+```bash
+cd qcfd2026-site
+pixi install                       # 拉所有 .so 到 .pixi/envs/default/lib/
+npx playwright install chromium    # 下 ~/.cache/ms-playwright/chromium-*/
+chmod +x scripts/chromium-wrapper.sh
+scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Testing …”
+```
+
+### 7.2 MCP 配置（位于 `TiMidlY-projects/.mcp.json`）
+
+```jsonc
+"playwright": {
+  "command": "npx",
+  "args": [
+    "-y", "@playwright/mcp@latest",
+    "--browser", "chromium",
+    "--executable-path",
+    "<YOUR_REPO_PATH>/scripts/chromium-wrapper.sh",
+    "--headless"
+  ]
+}
+```
+
+> wrapper 是一个 7 行 shell 脚本：注入 `LD_LIBRARY_PATH=$PROJECT/.pixi/envs/default/lib`，然后 `exec` Playwright 自带的 `chrome`。Playwright/MCP 完全无感知。把路径换成你本机 clone 的绝对路径即可。
+
+### 7.3 在新 Copilot 会话里端到端验证
+
+把下面这段贴给新会话，让它跑一遍，能看到截图就说明通路 OK：
+
+```
+请用 Playwright MCP 验证截图通路：
+1. 在 qcfd2026-site/ 目录下后台启动 `pixi run bun run dev`，等 Vite 输出 "Local: http://localhost:5173"。
+2. 用 playwright-browser_resize 设 1280×800，playwright-browser_navigate 打开 http://localhost:5173/。
+3. 用 playwright-browser_take_screenshot 截一张全页 PNG，保存到 session files。
+4. 再切到 390×844 + isMobile，截一张移动端首屏。
+5. 用 view 工具打开两张图给我看，并简评响应式是否合理。
+6. 结束时 kill 掉 vite 进程。
+```
+
+如果新会话报 `Browser "chromium" is not installed` 或 `Missing system dependencies`，说明 7.1 的两条命令还没跑过；如果报 `libXXX.so not found`，说明这个 lib 在 `pixi.toml` 里漏了，按下面的 troubleshooting 处理。
+
+### 7.4 Troubleshooting
+
+| 现象 | 原因 / 处理 |
+|---|---|
+| `chromium-wrapper.sh: pixi env not found` | 没跑 `pixi install` |
+| `chromium-wrapper.sh: no Playwright Chromium found` | 没跑 `npx playwright install chromium`，或者想用别的浏览器版本 → 设 `PLAYWRIGHT_CHROMIUM_BIN=/abs/path/to/chrome` 覆盖 |
+| `error while loading shared libraries: libXXX.so` | 该 lib 没在 pixi env 里。先 `pixi search 'libXXX*'` 找包名，再 `pixi add <pkg>`，最后 `scripts/chromium-wrapper.sh --version` 验证 |
+| MCP 报 `Missing system dependencies` 但 `--version` 通过 | 没把 `--executable-path` 指向 wrapper；MCP 默认会自己跑 `ldd` 校验它内置的那条路径，绕开它必须显式给 `--executable-path` |
+| 截图全黑 / 字体缺失 | 加 `pixi add fontconfig dejavu-fonts-ttf`，或在 wrapper 里 `export FONTCONFIG_PATH=$PIXI_LIB/../etc/fonts` |
+| 想换 Firefox / WebKit | 不可行：Playwright 用的是带 juggler/pwprotocol 补丁的 fork，conda-forge 上的 stock firefox 不兼容；Chromium 这条线就是官方 Chrome for Testing，没有 fork |
+
+### 7.5 这套设计的取舍
+
+- **wrapper 而不是改 chrome RPATH**：`patchelf` 修改后 Playwright 重装会被覆盖；wrapper 一次写好，浏览器升级也不影响。
+- **pixi 而不是 `apt-get download` 解 deb**：pixi 锁定版本、跨机可复现、`pixi.lock` 进 git；deb 那套没有版本管理也无法 CI。
+- **项目级而不是用户全局**：`.pixi/envs/default/` 在 `qcfd2026-site/`，删项目就全清干净；不污染 `$HOME` 或 `/usr`。
+
+---
+
+## 八、常见问题
 
 | 现象 | 原因 / 解决 |
 |---|---|
@@ -253,6 +319,6 @@ pixi run bun run deploy:ssh
 
 ---
 
-## 八、License
+## 九、License
 
 待定（议程内部使用，暂不开源）。
