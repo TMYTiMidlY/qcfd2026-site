@@ -18,3 +18,4 @@ dist/
 # Local-only — do NOT commit (token / hooks symlink to parent project)
 .mcp.json
 .github/hooks/
+AGENTS.md
