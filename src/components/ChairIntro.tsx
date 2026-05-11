@@ -1,5 +1,6 @@
 import { Award, Building2, GraduationCap } from 'lucide-react'
 import { conference } from '@/data/conference'
+import { Badge } from '@/components/ui/badge'
 
 export function ChairIntro() {
   const chair = conference.chairProfile
@@ -53,6 +54,31 @@ export function ChairIntro() {
             </div>
           </div>
         </article>
+
+        <div className="mt-8">
+          <div className="mb-4 flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="h-4 w-[3px] rounded-full bg-gradient-to-b from-primary to-secondary"
+            />
+            <span className="text-sm font-semibold text-fg">组织委员会</span>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {conference.committee.map((name) => (
+              <li key={name}>
+                <Badge
+                  variant="secondary"
+                  className="bg-bg-alt px-3 py-1 text-sm font-normal text-fg ring-1 ring-inset ring-fg/8 transition hover:bg-primary/10 hover:text-primary hover:ring-primary/20"
+                >
+                  {name}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-fg-muted">
+            统筹议程、嘉宾邀请与会务联络
+          </p>
+        </div>
       </div>
     </section>
   )
