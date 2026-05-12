@@ -922,6 +922,24 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 - **codex 后端给 agent 的路径是占位符**：jsonl 里 developer message 字面写 `Generated images are saved to ~/.codex/generated_images/<threadId>/_image_id_.png by default`——`_image_id_` 是字面占位符，不是真 id。所以 codex 想说也说不出真路径，主 agent 别指望。
 - **revised_prompt 对调试很有用**：虽然 codex agent 看不到，jsonl rollout 里能看到 hosted 模型把你 prompt 改成什么真正发给底层模型的——之前 §7.9 提到的"装饰把标题盖住"那种翻车，调 revised_prompt 比调 user prompt 更直接。验证脚本：`python3 -c "import json; [print(json.loads(l)['payload'].get('revised_prompt','')) for l in open(p) if 'image_generation_call' in l]" <rollout.jsonl>`。
 
+**并行实测（10 个 subagent 同时调 codex-image-codex 各生 1 张 1024×1024）**：
+
+| 指标 | 值 |
+|---|---|
+| 成功率 | 10/10（无 timeout / error / rate limit）|
+| 单次 wall_time | 53s – 110s（中位 67s，单跑基线 53s）|
+| 端到端（首个 codex 调用 → 末个完成）| 113s |
+| 完成模式 | 前 6 个在 134-147s（13s 窗口）内集中完成，后 4 个拖到 192s |
+| 0 shell call | 10/10（jsonl 验证）|
+
+完成顺序与 launch 顺序无关，看起来 OpenAI hosted image_generation 后端有并发 cap（≈5-6 有效 slot）。超出 cap 的请求不会 fail，只会进尾部排队。
+
+**使用建议**：
+
+- 一波生 ≤ 5 张时，端到端基本等于"单张耗时"，性价比最高（hero 桌面 + 移动 + topics banner + footer 就这种规模）
+- 一波生 5-10 张仍可用，端到端 ≈ 2× 单张耗时，但有明显尾部
+- 超过 10 张未实测，理论上能继续排但意义不大——拆成多波更可控
+
 ### 8.7 信息图 / 装饰地图：用真实数据先渲参考底图，再让 codex 艺术化
 
 **痛点**：直接让 gpt-image-2 凭空画地图（"画一张合肥地图，标 4 个交通枢纽"）效果很差——Chaohu 长江走向乱、站点位置随机、中文站名糊。模型没有地理常识，也没有任何参考能锚定。
