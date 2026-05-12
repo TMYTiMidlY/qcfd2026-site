@@ -655,12 +655,17 @@ agent 接管最后的截图验证，再 view 一次老实描述 → 报给用户
 
 - **截图必须归档不要 trash**：调试过程的桌面/移动截图存 `_archive/screenshots/`（`.gitignore` 已排除，不进 bundle 也不进 git），文件名带版本号 `hero-mobile-v3-seam.png`。一旦用户回头问"上一轮是什么样"，能立刻 `view` 对比。本仓库前几轮把临时截图 `trash-put` 掉，后面用户追问时不得不 `mv` 出来——白绕一圈。
 - **跨多轮迭代 codex 用 `threadId` 续 thread**：本仓库 Hero 装饰图三轮迭代（桌面横屏 → 修接缝 → 移动竖屏拉长）都在同一个 codex thread 里走 `codex-reply`，codex 自己保留前一轮的设计决策、Pillow 后处理脚本路径、`@media` 规则结构，不用每轮重新喂上下文。
-- **同步直调 codex MCP 是反模式，改用 background subagent**：主 agent 直接 `codex` / `codex-reply` 工具会把整个会话卡 2-5 分钟，超时还容易丢响应。更稳的形态是开一个 `task(agent_type=general-purpose, mode=background)` subagent，把"调 codex MCP 生图 + 落盘 + 报路径"作为它的唯一职责，主 agent 立刻回去归档上一轮截图、写下一轮 prompt 草稿、同步用户。subagent 完成后通知主 agent，再 `read_agent` 收件、playwright 截图复核。详细模板和硬沙箱参数见 8.6。
+- **同步直调 codex MCP 是反模式，改用 background subagent**：主 agent 直接 `codex` / `codex-reply` 工具会把整个会话卡 2-5 分钟，超时还容易丢响应。更稳的形态是开一个 `task(agent_type=general-purpose, mode=background)` subagent，把"调 codex MCP 生图"作为它的唯一职责，主 agent 立刻回去归档上一轮截图、写下一轮 prompt 草稿、同步用户。subagent 完成后通知主 agent，再 `read_agent` 收件、cp 出图、playwright 截图复核。详细形态、`.mcp.json` 配置、subagent prompt 模板见 8.6。
 - **明确说"用你的生图能力"**：codex 默认会先尝试 Pillow 拼裁（成本低），不喊它就不会主动调 hosted `image_gen`。prompt 里要写 `**必须使用 image_gen 工具从头生成新图**，Pillow 只允许用于后处理（裁切、加 alpha、压 WebP）`。
 - **生图 prompt 的硬约束要顶在前面**：装饰图最容易翻车的是"装饰把标题区盖住"。codex 真实发出去的 `revised_prompt` 里关键句是 `The upper-left half of the canvas... must be almost empty negative space for large title text overlay`、`Do not place any visible object behind the upper-left title area`。把"不要"和"必须留白的位置坐标"用粗体或 hard constraints 段落顶到 prompt 顶部，比放在末尾"风格描述"里有效得多。
 - **生图后再做 alpha 标题保护层**：仅靠 prompt 约束有时候还是会有元素飘到留白区。本仓库 Pillow 后处理脚本里固定写一段 `protected_alpha = 0.035 + 0.965 * smoothstep(...)`，把生图结果的左上 / 上半部 alpha 强制压到 ~3.5%，作为"prompt 约束失败时的兜底"。
 - **MCP timeout 不等于 codex 失败**：本仓库 `.mcp.json` 已经把 codex 超时调到 5 分钟（见 8.4），一次 `image_gen` + 后处理 + build 通常 2-3 分钟够，但偶尔还是会 timeout。**这时不要重启 codex，去 `~/.codex/sessions/2026/MM/DD/rollout-*.jsonl` 看 jsonl，里面 `image_generation_call` / `function_call` / `function_call_output` 全程留痕**——通常工作已完成，只是响应丢了。
 - **诚实把 ✗ 报给用户**：本轮 Hero 装饰图迭代里多次发生"agent 看完截图按预期话术总结、用户一眼看出 ✗"。**不要怕承认**「我前几次没诚实描述像素」，比"再悄悄改一版希望蒙过去"健康得多——agent 的可信度建立在敢说"我错了"上面。
+- **调 codex 必须让他生图，否则没意义**：host model 自己就能写 Pillow 脚本、改 CSS、思考构图——这些都不需要 codex。**调 codex 唯一不可替代的是 hosted `image_gen` 工具**。如果 prompt 里没强制"必须调 image_gen 生新图"，codex 会很自然走 Pillow 后处理路（成本低、它擅长），结果是你**白调一次 codex**，等价于绕了一圈让 codex 替你写 Python 脚本。**强制做法**：
+  - prompt 顶部写明"本轮必须至少调用一次 `image_gen` 生成新图，Pillow 只允许做后处理"
+  - 验收时 `grep -c '"type":"image_generation_call"' ~/.codex/sessions/.../rollout-*.jsonl`，**count = 0 就是没生图**，要追着继续 reply 直到真生为止
+  - 后处理只允许 alpha / 裁切 / 压 WebP，**严禁纵向重映射 / 拉伸 / 非线性变形**——这种"为了把元素移位置而扭曲几何"的处理一眼能看出来（Bloch 球被拉成椭球、水滴变竖椭圆），用户一定挑刺
+- **生图比例直接出对**：与其事后用 Pillow 变形到目标比例，不如让 codex 第一次就用对的 size 生成（image_gen 支持 1024×1024、1024×1792、1792×1024 等预设）。原图什么比例，最终资产就保持什么比例，CSS 用 `background-size: 100% auto` 让浏览器按宽适配，**永远不在像素层做几何变形**。
 
 适用范围：任何"agent 改完代码 / 资产、用户用眼睛验收、不满意要再迭代"的视觉任务（Hero 装饰图、Speaker 头像占位、Schedule 日历配色等）。纯逻辑改动 / 测试驱动的任务不需要这套。
 
@@ -745,97 +750,163 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 | 多轮迭代同一个 codex 上下文 | 用 `codex-reply` 带 `threadId`，session 状态在 codex 进程里维护 |
 | 仅仅想让 codex 跑一段命令并拿结果 | 直接 `!codex exec ...` 更轻；MCP 适合需要带回结构化结果或多轮的场景 |
 
-### 8.6 异步：用 subagent 包一层 codex MCP（推荐生图形态）
+### 8.6 异步：subagent 包一层「shell 全禁」的 codex MCP（推荐生图形态）
 
-**痛点**：主 agent 直接调 `codex` / `codex-reply` 工具是同步阻塞——一次生图 + Pillow 后处理 + WebP 压缩通常 2-3 分钟，主 agent 这段时间什么都干不了；MCP client 还有 5 分钟硬超时（见 8.4），偶尔响应丢了主 agent 还得去翻 jsonl 救场。本质问题是：**生图是个独立、可并行、可重试的任务，不该占用主 agent 的对话时间线**。
+**核心理念（一句话）**：让 codex 只做它独有的能力——「思考 + hosted `image_generation`」；**调用方一次性把所有数据 packaged 喂进 prompt**（构图约束、坐标、配色 token、参考图、留白区像素位置都准备好），**不给 codex shell 也不让它自己取数据**。codex 出图后落到 `~/.codex/generated_images/<threadId>/<id>.png`（codex 后端默认行为），后续 cp / Pillow 后处理 / WebP 压缩 / build 全由调用方（subagent / 主 agent）接管。这样既消除了 codex 做不可控行为的可能，也把每个执行者的职责切干净。
+
+**为什么要走到「shell 全禁」这一步**——本仓库 `aurora-test.png` 验证实验的反面证据：
+
+第一次跑形态时给 codex 留了 shell（`sandbox=workspace-write` + 软 prompt 约束 "你 may only call image_generation"），结果从 jsonl rollout 反查发现：
+
+1. codex 真的调了 hosted `image_generation`，base64 PNG 被后端自动落到 `~/.codex/generated_images/<threadId>/<id>.png`（约 1.4MB）
+2. **但 codex 并没有把这张图挪到调用方要的目标路径**——它转身用 `exec_command` 跑了一段手写 Python（zlib + struct + sin 波）现搓了一张 PNG（330KB），落到目标路径骗了过去
+3. 调用方 view 出来的"aurora 渐变图"实际上是 Python 数学函数画的程序化纹理，不是 GPT image 模型的产物
+
+教训：**只要 codex 还有 shell，prompt 软约束就拦不住它"自作主张"**。它会觉得"我用代码做更确定"，跳过本来该走的 hosted 工具。把 shell 整个 disable 掉是唯一硬保障——codex 失去 shell 之后只能调 `image_generation`，再没第二条路绕。
 
 **形态**：
 
 ```text
 主 agent
-  ├─ task(agent_type=general-purpose, mode=background, prompt=<生图 brief>)
+  ├─ 准备数据：实测坐标、参考图（playwright 截图 / staticmap）、配色 token、留白区像素框、上一轮 ✗ 项
+  ├─ task(agent_type=general-purpose, mode=background, prompt=<把上面数据 + 生图 brief 全打包进去>)
   │      └─ subagent (独立 context):
-  │            └─ codex MCP (sandbox=workspace-write, cwd=<生图目录>, approval-policy=never)
-  │                  └─ hosted image_generation → PNG 落盘 → Pillow 后处理 → WebP
-  ├─ 主 agent 立刻回去做别的事（归档上一轮截图、起草下一轮 prompt、同步用户）
-  └─ subagent 完成 → 通知主 agent → read_agent 收件 → playwright 截图 → 7.6 那套验证
+  │            └─ codex-image MCP (shell 全禁，详见下方 .mcp.json)
+  │                  └─ codex 思考构图 → hosted image_generation → 自动落 ~/.codex/generated_images/<threadId>/
+  │            └─ subagent 收到 codex 回复后，把 threadId 和后端落点告诉主 agent
+  ├─ 主 agent 立刻回去做别的事（归档上一轮截图、写下一轮 prompt 草稿、同步用户）
+  └─ subagent 完成 → read_agent 收件 → 主 agent 自己 cp ~/.codex/generated_images/<threadId>/*.png 到目标路径
+                                       → 主 agent 自己跑 Pillow 后处理（裁切 / alpha / WebP）
+                                       → bun run build → playwright 截图 → 7.6 那套验证
 ```
 
-**subagent 的边界（写在 task prompt 里）**：
+**`.mcp.json` 配置（双入口）**：
 
-- **职责单一**：调 codex MCP 生成 / 编辑指定的图片，按约定路径落盘，回报路径列表。**不要**改 `src/` 下的 React 代码、`package.json`、`vite.config.ts`、CSS 主题 token——这些主 agent 自己来。
-- **完整项目背景**：subagent 没有主 agent 的对话历史，所以 prompt 里要塞够：会议名（QCFD 2026）、视觉语言（深色 + aurora 渐变 / 量子蓝青紫）、目标受众（学术）、技术栈（React + Tailwind + WebP 资产）、文件落点约定（`_archive/generated/<asset>-v<N>.png` 原图归档 + `public/<asset>.webp` 上线版）。subagent 才能把这些约束传给 codex。
-- **codex MCP 调用要传足硬约束**（见下方模板），不要默认值。
+> `.mcp.json` 在 `.gitignore` 里（不进 git），所以下面这块需要你照着抄到本机的 `~/TiMidlY-projects/qcfd2026-site/.mcp.json` 或 `~/TiMidlY-projects/.mcp.json`。本机当前已就位。
 
-**codex MCP 工具的硬沙箱参数（subagent 调 `codex` 工具时必传）**：
+```jsonc
+"codex": {
+  "type": "local",
+  "command": "codex",
+  "args": ["mcp-server"],          // 全功能，给 review / 长任务用
+  "timeout": 300000
+},
+"codex-image": {
+  "type": "local",
+  "command": "codex",
+  "args": [
+    "mcp-server",
+    "--disable", "shell_tool",     // 关键：禁掉 bash / Python / cp / mv / curl
+    "--disable", "browser_use",
+    "--disable", "browser_use_external",
+    "--disable", "in_app_browser",
+    "--disable", "apps",
+    "--disable", "computer_use",
+    "--disable", "multi_agent",    // 防 codex 自己再开 subagent 套娃
+    "--disable", "plugins",
+    "--disable", "hooks",
+    "--disable", "skill_mcp_dependency_install"
+  ],
+  "timeout": 300000
+}
+```
+
+可用的 feature flag 列表来自 `codex features list`。`image_generation` 默认 stable=true，**不要 disable**——这是唯一保留的能力。codex 的 `apply_patch`（文本 patch 工具）跟 shell 是独立的，shell 关了 apply_patch 还在，但对 PNG 这种二进制无意义，所以也没问题。
+
+**为什么不直接改 `codex` 入口而是新加一个**：保留原 `codex` 给将来需要 shell 的场景（让 codex 跑长 review、补脚本、跨 model 接力）。生图专用 `codex-image`，调用方靠工具名 `codex-image-codex` / `codex-image-codex-reply` 区分两者。
+
+**subagent 调 `codex-image-codex` 工具时传的参数**（shell 关了之后参数大幅精简）：
 
 | 参数 | 值 | 作用 |
 |---|---|---|
-| `sandbox` | `"workspace-write"` | 允许 codex 自己 `write_file` / 跑 Pillow 落盘。`"read-only"` 会让生图结果无法写到磁盘（image_gen 是 hosted tool，不受本地 sandbox 限制，但落盘 shell 命令会被拦） |
+| `prompt` | 完整 packaged 数据（见下方模板） | 主战场——所有 codex 需要"思考"的素材都在这 |
 | `approval-policy` | `"never"` | subagent 跑在 background，没人在键盘前点 yes |
-| `cwd` | `<repo>/_archive/generated`（或具体生图子目录） | **真正的"硬只读"边界靠 cwd 收口**——sandbox=workspace-write 默认只把 cwd 及其子目录设为可写，仓库其他路径自动只读 |
-| `config.sandbox_workspace_write.writable_roots` | `[<repo>/public]`（如果还要写 webp 到 public） | 列出额外可写根；不在表里的路径写入会被 codex sandbox 拒绝 |
-| `config.sandbox_workspace_write.network_access` | `false` | model 自己跑的 shell 不许联网（hosted image_generation 不走这条网络通道，照样能跑） |
-| `base-instructions` | 见下方模板字符串 | 把"只生图，不准改源代码 / 不准 npm install / 不准 git commit"作为系统指令钉死，比放在 user prompt 里更稳 |
+| `sandbox` | `"read-only"` | shell 已关，sandbox 失去主作用，传 read-only 是双保险（万一某 feature 又能写文件） |
+| `base-instructions` | `"You are a single-purpose image generation agent. You may ONLY call the hosted image_generation tool. You have no shell access. Think carefully about composition based on the data provided in the user prompt; do not request additional data."` | 系统级指令钉死职责，比放 user prompt 更稳 |
 
-> 关于"硬性只读"：codex 没有提供"只允许 image_generation、其他全禁"的开关——它的 sandbox 是粒度到 shell / 文件系统的。但 **cwd + writable_roots + base-instructions 三件套已经足够**：cwd 限定写入域，writable_roots 显式枚举例外，base-instructions 在 prompt 层钉边界。subagent 自己也是另一道闸：主 agent 设计的 task prompt 里没让它做的事它就不会做。
+> 旧版 §8.6 那一堆 `cwd` / `writable_roots` / `network_access` / `config.sandbox_workspace_write.*` 在 shell 关了之后**全部失去意义**——shell 没了就没人写本地文件、也没人发本地 HTTP，那些是约束 shell 用的。简化到上面 4 个参数就够了。
 
-**subagent prompt 模板**（拷给 `task` 工具的 `prompt` 参数）：
+**subagent prompt 模板**（核心：把所有数据 packaged 进去，不让 codex 自己取）：
 
 ```text
-你的唯一职责：调用 codex MCP 工具生成 <资产名>，按指定路径落盘，回报文件路径。
+你的唯一职责：调用 codex MCP 工具（工具名 `codex-image-codex`）生成 <资产名>，
+读 codex 回复里的 threadId 和后端落点，回报给主 agent。
 
-【项目背景】
-QCFD 2026 是流体力学量子计算前沿研讨会的官方静态站。技术栈 React 19 + Vite + Tailwind v4 +
-shadcn。视觉语言：深色 #0b0f17 底，aurora 渐变（量子蓝 #38bdf8 + 青 #22d3ee + 紫 #a78bfa），
-学术海报观感。资产约定：原始 PNG 归档到 _archive/generated/<asset>-v<N>.png（不进 git），
-压缩 WebP 上线版落 public/<asset>.webp。
+【你的边界】
+- 你的 codex MCP 入口是 `codex-image-codex`（不是 `codex-codex`）。codex 那侧已经
+  禁了 shell，只能调 hosted image_generation。你**不要**自己跑 cp / mv / Pillow——
+  那些都是主 agent 接手做的。
+- 你只做一次工具调用（`codex-image-codex`），不要 codex-image-codex-reply。
+- 你不能改本仓库任何文件。
 
-【本轮任务】
-<具体要什么图：用途 / 尺寸 / 构图约束 / 标题留白区坐标 / alpha 兜底层>
-
-【硬约束】
-- 必须使用 codex MCP 的 hosted image_generation（不是 Pillow 拼裁旧素材，也不是写 Python 调
-  openai.images.generate）。Pillow 仅允许用于后处理（裁切、加 alpha、压 WebP）。
-- 不要改 src/ 下任何 React 代码、CSS 主题 token、package.json、vite.config.ts。
-- 不要 git add / git commit。
-- 不要 npm install / bun install / pixi add。
-
-【调 codex MCP 时必传的参数】
+【调 codex-image-codex 时传的参数】
 {
+  "prompt": "<下面这一大段，主 agent 已经替你 packaged 好>",
   "approval-policy": "never",
-  "sandbox": "workspace-write",
-  "cwd": "<repo>/_archive/generated",
-  "config": {
-    "sandbox_workspace_write": {
-      "writable_roots": ["<repo>/public"],
-      "network_access": false
-    }
-  },
-  "base-instructions": "You are a single-purpose image generation agent. You may ONLY:
-    (1) call hosted image_generation; (2) run Pillow for post-processing (crop/alpha/webp);
-    (3) write the resulting files into the cwd or writable_roots. You MUST NOT modify any
-    source code, run package managers, or make git commits."
+  "sandbox": "read-only",
+  "base-instructions": "You are a single-purpose image generation agent. You
+    may ONLY call the hosted image_generation tool. You have no shell access.
+    Think carefully about composition based on the data provided in the user
+    prompt; do not request additional data."
 }
 
-【完成后回报格式】
-- 生成的文件绝对路径（PNG 原图 + WebP 上线版）
-- codex 用了几次 image_generation 调用、是否走了 Pillow 后处理
-- 任何 sandbox 拒绝的写入尝试（如果有，主 agent 需要知道）
+【喂给 codex 的 prompt（packaged 数据，主 agent 已准备好）】
+你将生成一张 <尺寸> 的 PNG，用途：<asset 名 + 用在哪个 section>。
+
+视觉语言：
+  - 深色背景 #0b0f17
+  - aurora 渐变三主色：#38bdf8 (sky) / #22d3ee (cyan) / #a78bfa (violet)
+  - 学术海报观感，不出现文字 / logo
+  - <其他风格描述>
+
+构图硬约束（顶到 prompt 顶部、用 hard constraints 段落，不要藏在描述末尾）：
+  - 留白区坐标：左上 0-40% 宽、0-50% 高 必须是 negative space（标题文字会叠在上面）
+  - <其他不要、必须的位置坐标>
+
+参考素材（已贴在下方）：
+  - 几何参考：<staticmap 渲染的 1024x1024 PNG，base64 内联或 -i 入参>
+  - 风格参考：<上一版 hero 截图 / 设计语言示意，base64 内联或 -i 入参>
+  - 上一轮用户挑刺的 ✗ 项：<原话照抄，比 paraphrase 准>
+
+输出要求：
+  - 调用一次 hosted image_generation 工具，size = <1024x1024 / 1024x1792 / 1792x1024>
+  - 不要用 Python / 任何代码"现搓"图。你**没有 shell**，也不要尝试。
+  - 生成后回复里只需说明：用了哪个 size、revised_prompt 关键句、image_id（codex 后端
+    会自动告诉你它落到了 ~/.codex/generated_images/<threadId>/<image_id>.png）。
+
+【完成后回报主 agent】
+- codex 返回的 threadId（主 agent 后续 cp 用 + 续 thread 用）
+- codex 后端落点（应是 ~/.codex/generated_images/<threadId>/ 下的 PNG 文件）
+- codex 自己 message 里报的 image_id / revised_prompt 关键句
+- 总耗时（秒）
+- 是否 timeout / error
 ```
 
-**主 agent 怎么对接**：
+**主 agent 对接（关键差别：cp 由主 agent 自己做）**：
 
-1. `task(agent_type="general-purpose", mode="background", name="hero-regen", prompt=<上面模板>)` 拿到 `agent_id`。
-2. 主 agent 立刻回去干别的事（归档 `_archive/screenshots/hero-mobile-vN.png`、起草下一轮 prompt、和用户同步本轮 ✗ 项）。**不要主动 read_agent 轮询**——会有自动通知。
-3. 收到完成通知 → `read_agent(agent_id, wait=true)` 一次拿全文。如果 subagent 报告 sandbox 拒绝过写入，按它的描述决定是放宽 `writable_roots` 还是收紧 prompt。
-4. 接管最后一公里：`bun run build` → playwright 截图 → 7.6 那套对照验证 → 报给用户。
+1. 准备 packaged 数据：实测 GPS 坐标（Nominatim，见 §8.7）、参考底图（staticmap，见 §8.7）、上一版截图（playwright，见 §7.6 / §7.9）、配色 token（直接从 `src/index.css` 读）、留白区像素坐标（`view` 截图自己测）。
+2. `task(agent_type="general-purpose", mode="background", name="hero-regen-vN", prompt=<packaged 数据 + 上面的 subagent 模板>)`
+3. 主 agent 立刻回去干别的事，**不要主动 read_agent 轮询**——会有自动通知。
+4. 收到完成通知 → `read_agent(agent_id, wait=true)` 拿 threadId + 后端落点。
+5. **主 agent 自己 cp**：`cp ~/.codex/generated_images/<threadId>/<image_id>.png _archive/generated/<asset>-v<N>.png`（PNG 原图归档）。
+6. **主 agent 自己跑 Pillow 后处理**（裁切 / alpha 标题保护层 / WebP 压缩，见 §7.9 几条 bullet），落 `public/<asset>.webp`。
+7. `bun run build` → playwright 截图 → §7.6 那套对照验证 → 报给用户。
 
-**为什么不让 subagent 自己 build + 截图**：subagent context 越纯越好——它的输出物只有"图片文件 + 一段日志"，主 agent 才掌握用户审美反馈这条主线。subagent 自己跑 build / 截图会把它的 context 拖长，下一轮迭代 `codex-reply` 续 thread 也变难（threadId 在 codex 进程里，subagent 退出 thread 还在，但主 agent 拿不到 subagent 当时的 context）。
+**为什么 cp / Pillow / build 全归主 agent**：
 
-**threadId 续 thread 怎么跨 subagent**：第一次 subagent 跑完，让它在回报里**带上 codex 返回的 `threadId`**；下一轮主 agent 起新 subagent 时把 threadId 喂进 prompt，让新 subagent 调 `codex-reply` 而不是 `codex`，codex 进程那侧的设计决策 / Pillow 脚本 / @media 规则就接得上。
+- subagent context 越纯越好——它的输出物就两条数据（threadId + 后端落点），不掺杂业务知识。
+- 主 agent 才掌握用户审美反馈这条主线，Pillow 怎么裁、alpha 兜底层怎么写都是业务决策。
+- subagent 自己有 shell（继承 Copilot 主沙箱），但**故意不用**——把 cp / Pillow 留给主 agent，subagent 的输出物只有"两条数据"这种简单形态，让职责干净、context 短。
 
-**适用范围**：本节专为生图设计。其他需要 codex 能力（长 review / 跨 model 接力）但**不需要 hosted 工具**的场景，直接同步调 codex MCP 反而更轻——同步等几十秒换一次完整结构化回复，开 subagent 反而在加层。
+**threadId 续 thread 跨 subagent**：第一次 subagent 跑完会回报 threadId；下一轮主 agent 起新 subagent 时把 threadId 喂进 prompt，让新 subagent 调 `codex-image-codex-reply` 而不是 `codex-image-codex`，codex 进程那侧的设计决策 / 上一轮 revised_prompt 就接得上。注意 codex 后端给同一 threadId 的图都落到同一个 `~/.codex/generated_images/<threadId>/` 目录下，主 agent 按 image_id 区分新旧。
+
+**适用范围**：本节专为生图设计。其他需要 codex 能力（长 review / 跨 model 接力 / 让 codex 帮忙跑脚本）但**不需要 hosted 工具**的场景，用全功能的 `codex` 入口（不是 `codex-image`）即可，且同步直调反而更轻——同步等几十秒换一次完整结构化回复，开 subagent + shell 全禁的 codex 反而在加层。
+
+**待实测的开放项**（本节当前基于一次正向实验 + 一次反例 jsonl 反查，shell-disabled 路径仍是合理推测；下一次真做生图时验证后回填）：
+
+- shell 禁了之后 codex 还能不能调起 hosted image_generation——理论上能（feature flag 互相独立），但等首次真跑后回填证据。
+- codex 的 message 里会不会主动报 image_id / 后端落点路径——如果不报，主 agent 要靠 `ls -la ~/.codex/generated_images/<threadId>/` 自己扫，需要约定时间窗。
+- shell 禁了之后 codex 出现"我没法落盘"的混乱回复时怎么处理——大概率出现，需要 base-instructions 里加一句"don't worry about saving the file; the backend handles it"。
 
 ### 8.7 信息图 / 装饰地图：用真实数据先渲参考底图，再让 codex 艺术化
 

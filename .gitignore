@@ -16,7 +16,10 @@ dist/
 .playwright-mcp/
 
 # Image archive (full-res PNG masters / JPG fallbacks — not in bundle)
-archive/
+_archive/
+
+# Original source documents (docx/xlsx from conference organizer)
+_sources/
 
 # Top-level debug screenshots (Playwright MCP sometimes saves to repo root)
 # Real assets live in public/ or archive/; root-level *.png is always scratch.
