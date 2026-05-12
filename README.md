@@ -201,6 +201,19 @@ unit 文件已 commit 在 `systemd/qcfd2026-site.service`，仅 7 行 ExecStart�
 
 报告人卡片照片：当前用首字头像 (`<Avatar />`)；如要换真实头像，给 `Speaker` 类型加 `avatar?: string` 字段、把图放到 `public/avatars/`，再在 `SpeakerCard` 里替换 `<Avatar />`。
 
+### 来源优先级（写入 / 改动数据时遵守）
+
+每一处文案的出处都登记在 `SOURCES.md`。当多处来源对同一字段给出不同内容时，按以下从高到低取舍：
+
+1. **用户明确指定参考的资料**（例如用户给出某 docx / 链接，并说"以这个为准"）——最高优先级。
+2. **用户明确说出的改动**（例如"把 X 改成 Y"）——同样最高优先级，可覆盖既有源 / 既有约定。
+   - 必须在 `SOURCES.md` 的相关条目记录改动时间（精确到分钟即可，例如 `2026-05-12 10:05 用户口头`）和改动内容，便于回溯。
+3. **会议方权威源**（`_sources/` 下的 docx / xlsx 等组委会原文件）——默认取信源。
+4. **公开权威资料**（高校 / 机构官网、维基百科 / 百度百科等可核查公开资料）——用于会议方未给出的字段。
+5. **AI / 维护者自行检索 / 推断的内容**——优先级最低，仅在前述来源缺失时使用，且应在 `SOURCES.md` 标记为 ⚫「润色/编辑」或 🔴「占位/暂定」。
+
+> **歧义处理**：用户的说法如果含糊不清（例如只说"那个人的 title 不对"但没指明改成什么），不要自行猜测——用所在环境提供的提问工具（如 `ask_user`）向用户确认"是否以您本次说法为最高优先信息"，再落盘。
+
 ---
 
 ## 六、部署
@@ -486,6 +499,86 @@ await page.evaluate(() => {
 也可以用 `page.screenshot({ mask: [page.locator('header')] })` 让 playwright 在拼接时把 header 区域涂粉色——但 mask 会留下色块，不如 `display: none` 干净。
 
 > 这个问题只在拼接（element 高于 viewport）时出现。fullPage 截图也会拼接，但 fullPage 模式下 playwright 自己处理 fixed 元素：默认只在拼好的图最上方保留一份，下方都隐藏。**所以 fullPage 不需要手动 hide header；只有 `locator(...).screenshot()` 拍超长 element 才需要。**
+
+#### `playwright-browser_navigate` 不会强刷
+
+`page.goto(url)` 对 same-URL 是乐观的——尤其当 URL 只是 hash 变化（`#traffic` → `#topics`），playwright 会跳过整页 reload。叠加 vite HMR WebSocket 在某些情况（HTTPS 反代后端 + 自签证书 / 内网域名）连不上，磁盘 + `journalctl --user -u qcfd2026-site` 都说 "hmr update Traffic.tsx" 推过了，但 DOM 还是旧的。
+
+修法：截图前显式 reload。
+
+```js
+// 在 take_screenshot 之前
+await page.evaluate(() => location.reload(true))
+// 或者 navigate 加时间戳
+await page.goto(`http://localhost:8888/?_=${Date.now()}#traffic`)
+```
+
+实战教训：DOM 跟磁盘对不上时**先怀疑 navigate 没真刷新**，别绕去查 worktree / 缓存 / build。`document.querySelectorAll('section#xxx figure').length` 一查就知道页面是不是新代码。
+
+#### `evaluate` 大 promise 链 vs MCP 默认超时
+
+`playwright-browser_evaluate` 默认 ~10s 超时；如果 `evaluate` 里串了"等图片加载 + 等字体 + 滚动 + 等 lazy 图发请求"，常常超时。**JS 实际上跑完了**——超时只是 MCP 等不下去，浏览器侧的副作用（DOM mutation / `style.display = 'none'` / scroll）已生效。
+
+修法：拆短。一个 `evaluate` 只做一件能在 5s 内返回的事，长链拆成 3-4 个串行调用：
+
+```text
+evaluate  () => location.reload(true)
+wait_for  time=2          # 等 React mount
+evaluate  () => Array.from(document.images).every(i => i.complete)   # 探针，false 就再 wait
+evaluate  () => { document.querySelector('header').style.display = 'none'; document.getElementById('traffic').scrollIntoView() }
+take_screenshot ...
+```
+
+#### `mix-blend-mode: multiply` vs `darken` 在浅背景下没区别
+
+地图 / 水彩 / 信息图想"融入页面"时，`mix-blend-mode: multiply` 是常见选择——把图直接乘到背景上，纸面变透明。`darken` 是兄弟（取 `min(top, bottom)`）。**但当背景接近纯白**（比如本站 `--color-bg = #f7f9fc`），两者出片几乎完全一样：
+
+- multiply：`result = top × bottom / 255` → bottom ≈ 255 时 result ≈ top
+- darken：`min(top, bottom)` → bottom ≈ 255 时 min ≈ top
+
+只有背景**本身有颜色**（比如换到 `bg-bg-alt = #eff3f9` 或更深的 section）才能区分出来。同理，soft-light / overlay 这些"对比型"blend mode 在白底也基本不工作。
+
+实战做法：**先看背景色**。背景 ≥ 95% 亮度 → 直接 `mix-blend-multiply` 或者根本不用 blend，靠 ring + 微调底色（本站 Traffic section 选了 `rounded-2xl bg-bg-alt/40 p-1 ring-1 ring-black/[0.04]` —— 极薄边 + 一点点偏蓝灰底，介于 card-surface 卡片和裸图之间）即可；背景较暗才值得花精力对比 multiply / darken / soft-light 哪个出片最好。
+
+#### 给 user 看方案对比图，**一次只放一个**
+
+带 caption 的 2×2 网格自我感觉效率高（一张图看 4 个方案），但实际上：
+- 用户要"想象 caption 不在时是什么样"——多一层心智负担
+- 缩略图尺寸下两个 blend mode 的细微差别看不出（缩到 600px 宽更糊了）
+- "这上线后下面会写什么字"—— 每多一个方案都要解释一次
+
+**正确做法**：一个方案一张独立截图，**不带 caption**（`<figcaption className="sr-only">` 给屏幕阅读器，肉眼看不见，跟上线效果一字不差）。截法：源码先固定一个方案 → 用 `evaluate` 临时改 className 截另一个，循环 N 次 → 截完不动源码。这样每张截图都是该方案的「真上线效果」，用户脑子不用做减法。
+
+---
+
+### 7.8 截图给 agent 看会花多少 token
+
+截完图用 `view` 读，本质是**喂 host model 一张图**——这部分 token 进对话 context，不是免费的。Anthropic 官方公式（[vision docs](https://docs.anthropic.com/en/docs/build-with-claude/vision)）：
+
+```
+image_tokens ≈ width × height / 750
+```
+
+**只看像素尺寸**，跟文件格式（PNG / JPG / WebP）和文件大小（KB / MB）**完全无关**——模型内部都是解码成位图再处理。
+
+**单图封顶**：
+
+| 模型 | 单图最大 token | 占 1M context 比例 |
+|---|---|---|
+| Sonnet / Haiku / 旧 Opus | ~1568 | ~0.16% |
+| Opus 4.7（高清） | ~4784 | ~0.48% |
+
+超过原生分辨率（旧模型长边 1568 px、Opus 4.7 是 2576 px）会被等比缩到上限。所以一张 1920×1080 的桌面截图和一张 4000×3000 的相机原图，喂给 Sonnet 都是 ~1568 tokens。
+
+针对本仓库截图工作流的几条结论：
+
+- **WebP 不省 token**，省的是请求体积 / 上传带宽（API 32 MB 限制）。`public/generated/*.webp` 用 WebP 是为了**浏览器加载快**，跟 agent token 无关。
+- **真要省 token**：`playwright-browser_resize` 设小一点（1280×800 比 1920×1080 便宜不到一点点，因为都顶到 1568 上限了；真有差别要降到 ≤1092×1092 长边才线性下降），或者截 element 而不是 fullPage。
+- 移动端 390×844 截图：约 `390 × 844 / 750 ≈ 439 tokens`，比 1568 上限便宜 3.5 倍——移动端 review 多截几张不心疼。
+- 拼图：把多张小截图合并成一张 grid 喂模型，能把 N 张图的固定开销摊到一张上（同时方便对比）。
+- 极限压缩的有损 WebP（quality < 50）让小字 / 图标识别变差，但 token 数不变——**别为了省 token 去压质量，没用**。
+
+> 一句话：**改像素尺寸，不是改格式**。一张图占 1M context 的千分之一到千分之五，循环跑 5 步 × 4 张图大概 2–3% context，不至于把对话喂爆——但 fullPage 长截图拼接出来超大的也不要无脑塞。
 
 ---
 

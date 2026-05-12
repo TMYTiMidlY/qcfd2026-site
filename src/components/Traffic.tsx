@@ -101,13 +101,13 @@ export function Traffic() {
           </div>
         </div>
 
-        <figure className="relative mx-auto mt-10 max-w-4xl">
+        <figure className="mx-auto mt-10 max-w-4xl rounded-2xl bg-bg-alt/40 p-1 ring-1 ring-black/[0.04]">
           <img
             src="/generated/traffic-map.webp"
             alt="合肥三大交通枢纽（新桥机场、合肥南站、合肥站）抵达翡翠湖迎宾馆的相对位置示意"
             loading="lazy"
             decoding="async"
-            className="block aspect-[3/2] w-full rounded-3xl object-cover ring-1 ring-black/[0.04] mask-fade-edges-soft"
+            className="block aspect-[3/2] w-full rounded-xl object-cover"
           />
           <figcaption className="sr-only">
             合肥三大交通枢纽至翡翠湖迎宾馆的示意图（编辑插画，非实景导航图，下方各卡片含逐条路线）
