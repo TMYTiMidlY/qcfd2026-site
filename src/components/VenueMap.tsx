@@ -1,3 +1,4 @@
+import { useInView } from 'react-intersection-observer'
 import { MapPin, Navigation, Building, ExternalLink } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
@@ -133,6 +134,12 @@ function tryOpenInApp(target: MapTarget): void {
 }
 
 export function VenueMap() {
+  // 提前 300px 预加载，triggerOnce 保证只触发一次后即停止观察
+  const { ref: mapWrapRef, inView: mapReady } = useInView({
+    triggerOnce: true,
+    rootMargin: '300px',
+  })
+
   return (
     <section id="venue" className="section-pad">
       <div className="container-page">
@@ -157,15 +164,23 @@ export function VenueMap() {
         </div>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:gap-6">
-          {/* 左侧：百度地图 iframe */}
-          <div className="card-surface overflow-hidden">
-            <iframe
-              src={baiduEmbedUrl}
-              title="百度地图：合肥翡翠湖迎宾馆"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="block aspect-[4/3] w-full border-0 sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]"
-            />
+          {/* 左侧：百度地图 iframe（进入视口附近才加载） */}
+          <div ref={mapWrapRef} className="card-surface overflow-hidden">
+            {mapReady ? (
+              <iframe
+                src={baiduEmbedUrl}
+                title="百度地图：合肥翡翠湖迎宾馆"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="block aspect-[4/3] w-full border-0 sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]"
+              />
+            ) : (
+              <div className="flex aspect-[4/3] w-full items-center justify-center bg-bg-alt text-fg-muted sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]">
+                <MapPin className="mr-2 size-5 animate-pulse" />
+                地图加载中…
+              </div>
+            )}
           </div>
 
           {/* 右侧：场地信息 + 跳转按钮 */}
