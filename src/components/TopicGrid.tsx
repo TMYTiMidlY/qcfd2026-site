@@ -10,7 +10,7 @@ import {
   Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { topics, crossCuttingSpeakers, type Topic } from '@/data/topics'
+import { topics, type Topic } from '@/data/topics'
 import { speakers } from '@/data/speakers'
 
 const iconMap: Record<Topic['icon'], typeof Atom> = {
@@ -32,7 +32,7 @@ export function TopicGrid() {
   return (
     <section id="topics" className="section-pad">
       <div className="container-page">
-        <figure className="relative -mx-4 mb-10 overflow-hidden rounded-3xl sm:-mx-6 md:mx-0">
+        <figure className="relative mb-10 overflow-hidden rounded-3xl">
           <img
             src="/generated/topics-banner.webp"
             alt=""
@@ -92,16 +92,11 @@ export function TopicGrid() {
                     <h3 className="text-base font-semibold leading-snug text-fg sm:text-lg">
                       {t.title}
                     </h3>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      {t.speakers.map((sid) => (
-                        <span
-                          key={sid}
-                          className="rounded-full bg-bg-alt px-2 py-0.5 text-[11px] text-fg-muted ring-1 ring-black/[0.06]"
-                        >
-                          {speakerName(sid)}
-                        </span>
-                      ))}
-                    </div>
+                    {!isOpen && (
+                      <p className="mt-1 text-[11px] text-fg-muted">
+                        {t.speakers.length} 个相关报告
+                      </p>
+                    )}
                   </div>
                   <ChevronDown
                     className={cn(
@@ -121,16 +116,21 @@ export function TopicGrid() {
                       <p className="text-sm leading-relaxed text-fg-soft">
                         {t.description}
                       </p>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {t.speakers.map((sid) => (
-                          <a
-                            key={sid}
-                            href="#speakers"
-                            className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary hover:text-white"
-                          >
-                            {speakerName(sid)}
-                          </a>
-                        ))}
+                      <div className="mt-4">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
+                          相关报告
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {t.speakers.map((sid) => (
+                            <a
+                              key={sid}
+                              href="#speakers"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/[0.06] px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary hover:text-white"
+                            >
+                              {speakerName(sid)}
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -144,15 +144,7 @@ export function TopicGrid() {
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/[0.04] p-4">
           <Layers className="mt-0.5 size-4 shrink-0 text-primary" />
           <p className="text-sm text-fg-soft">
-            以上为本届会议的主要研讨方向，各方向之间互有交叉；
-            {crossCuttingSpeakers.length > 0 ? (
-              <>
-                此外
-                {crossCuttingSpeakers.map((sid) => speakerName(sid)).join('、')}
-                等报告横跨多个方向，覆盖量子科学计算平台与工程应用全链路。
-              </>
-            ) : null}
-            完整报告列表详见
+            以上为本届会议的主要研讨方向，各方向之间互有交叉，分类仅供参考。完整报告列表详见
             <a href="#speakers" className="ml-0.5 font-medium text-primary hover:underline">
               特邀报告讲者
             </a>
