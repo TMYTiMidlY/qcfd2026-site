@@ -655,6 +655,7 @@ agent 接管最后的截图验证，再 view 一次老实描述 → 报给用户
 
 - **截图必须归档不要 trash**：调试过程的桌面/移动截图存 `_archive/screenshots/`（`.gitignore` 已排除，不进 bundle 也不进 git），文件名带版本号 `hero-mobile-v3-seam.png`。一旦用户回头问"上一轮是什么样"，能立刻 `view` 对比。本仓库前几轮把临时截图 `trash-put` 掉，后面用户追问时不得不 `mv` 出来——白绕一圈。
 - **跨多轮迭代 codex 用 `threadId` 续 thread**：本仓库 Hero 装饰图三轮迭代（桌面横屏 → 修接缝 → 移动竖屏拉长）都在同一个 codex thread 里走 `codex-reply`，codex 自己保留前一轮的设计决策、Pillow 后处理脚本路径、`@media` 规则结构，不用每轮重新喂上下文。
+- **同步直调 codex MCP 是反模式，改用 background subagent**：主 agent 直接 `codex` / `codex-reply` 工具会把整个会话卡 2-5 分钟，超时还容易丢响应。更稳的形态是开一个 `task(agent_type=general-purpose, mode=background)` subagent，把"调 codex MCP 生图 + 落盘 + 报路径"作为它的唯一职责，主 agent 立刻回去归档上一轮截图、写下一轮 prompt 草稿、同步用户。subagent 完成后通知主 agent，再 `read_agent` 收件、playwright 截图复核。详细模板和硬沙箱参数见 8.6。
 - **明确说"用你的生图能力"**：codex 默认会先尝试 Pillow 拼裁（成本低），不喊它就不会主动调 hosted `image_gen`。prompt 里要写 `**必须使用 image_gen 工具从头生成新图**，Pillow 只允许用于后处理（裁切、加 alpha、压 WebP）`。
 - **生图 prompt 的硬约束要顶在前面**：装饰图最容易翻车的是"装饰把标题区盖住"。codex 真实发出去的 `revised_prompt` 里关键句是 `The upper-left half of the canvas... must be almost empty negative space for large title text overlay`、`Do not place any visible object behind the upper-left title area`。把"不要"和"必须留白的位置坐标"用粗体或 hard constraints 段落顶到 prompt 顶部，比放在末尾"风格描述"里有效得多。
 - **生图后再做 alpha 标题保护层**：仅靠 prompt 约束有时候还是会有元素飘到留白区。本仓库 Pillow 后处理脚本里固定写一段 `protected_alpha = 0.035 + 0.965 * smoothstep(...)`，把生图结果的左上 / 上半部 alpha 强制压到 ~3.5%，作为"prompt 约束失败时的兜底"。
@@ -728,7 +729,7 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `MCP error -32001: Request timed out` | 默认 60s 超时不够生图用。本仓库已在 `.mcp.json` 给 codex 加 `"timeout": 300000`（5 分钟）。如果还是超，**server 端通常已跑完了**，文件会出现在目标路径，只是响应丢了——临时看图直接 `view` 文件即可 |
+| `MCP error -32001: Request timed out` | 默认 60s 超时不够生图用。本仓库已在 `.mcp.json` 给 codex 加 `"timeout": 300000`（5 分钟）。如果还是超，**server 端通常已跑完了**，文件会出现在目标路径，只是响应丢了——临时看图直接 `view` 文件即可。**长期解法是把生图托付给 background subagent**，见 8.6 |
 | `image_generation` 没触发 | 检查 `~/.codex/auth.json` 的 `auth_mode` 是不是 `chatgpt`；API key 模式下这个 hosted tool 被 codex backend 关掉 |
 | 改了 `.mcp.json` 但 `/mcp` 没看到新 server | Copilot 启动时锁定 MCP 列表。`/restart` 或重开 `copilot` |
 | codex 进程残留 | `ps -ef | grep codex mcp-server` 确认，会话退出后通常会自动收。手动清用 `kill <pid>`（本仓库约定不允许 `pkill`/`killall`） |
@@ -743,6 +744,225 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 | 让 codex 用 GPT-5 系做长 review、自己再用 Sonnet 接力总结 | 比直接 `/model` 切换更灵活，可保留两条独立 thread |
 | 多轮迭代同一个 codex 上下文 | 用 `codex-reply` 带 `threadId`，session 状态在 codex 进程里维护 |
 | 仅仅想让 codex 跑一段命令并拿结果 | 直接 `!codex exec ...` 更轻；MCP 适合需要带回结构化结果或多轮的场景 |
+
+### 8.6 异步：用 subagent 包一层 codex MCP（推荐生图形态）
+
+**痛点**：主 agent 直接调 `codex` / `codex-reply` 工具是同步阻塞——一次生图 + Pillow 后处理 + WebP 压缩通常 2-3 分钟，主 agent 这段时间什么都干不了；MCP client 还有 5 分钟硬超时（见 8.4），偶尔响应丢了主 agent 还得去翻 jsonl 救场。本质问题是：**生图是个独立、可并行、可重试的任务，不该占用主 agent 的对话时间线**。
+
+**形态**：
+
+```text
+主 agent
+  ├─ task(agent_type=general-purpose, mode=background, prompt=<生图 brief>)
+  │      └─ subagent (独立 context):
+  │            └─ codex MCP (sandbox=workspace-write, cwd=<生图目录>, approval-policy=never)
+  │                  └─ hosted image_generation → PNG 落盘 → Pillow 后处理 → WebP
+  ├─ 主 agent 立刻回去做别的事（归档上一轮截图、起草下一轮 prompt、同步用户）
+  └─ subagent 完成 → 通知主 agent → read_agent 收件 → playwright 截图 → 7.6 那套验证
+```
+
+**subagent 的边界（写在 task prompt 里）**：
+
+- **职责单一**：调 codex MCP 生成 / 编辑指定的图片，按约定路径落盘，回报路径列表。**不要**改 `src/` 下的 React 代码、`package.json`、`vite.config.ts`、CSS 主题 token——这些主 agent 自己来。
+- **完整项目背景**：subagent 没有主 agent 的对话历史，所以 prompt 里要塞够：会议名（QCFD 2026）、视觉语言（深色 + aurora 渐变 / 量子蓝青紫）、目标受众（学术）、技术栈（React + Tailwind + WebP 资产）、文件落点约定（`_archive/generated/<asset>-v<N>.png` 原图归档 + `public/<asset>.webp` 上线版）。subagent 才能把这些约束传给 codex。
+- **codex MCP 调用要传足硬约束**（见下方模板），不要默认值。
+
+**codex MCP 工具的硬沙箱参数（subagent 调 `codex` 工具时必传）**：
+
+| 参数 | 值 | 作用 |
+|---|---|---|
+| `sandbox` | `"workspace-write"` | 允许 codex 自己 `write_file` / 跑 Pillow 落盘。`"read-only"` 会让生图结果无法写到磁盘（image_gen 是 hosted tool，不受本地 sandbox 限制，但落盘 shell 命令会被拦） |
+| `approval-policy` | `"never"` | subagent 跑在 background，没人在键盘前点 yes |
+| `cwd` | `<repo>/_archive/generated`（或具体生图子目录） | **真正的"硬只读"边界靠 cwd 收口**——sandbox=workspace-write 默认只把 cwd 及其子目录设为可写，仓库其他路径自动只读 |
+| `config.sandbox_workspace_write.writable_roots` | `[<repo>/public]`（如果还要写 webp 到 public） | 列出额外可写根；不在表里的路径写入会被 codex sandbox 拒绝 |
+| `config.sandbox_workspace_write.network_access` | `false` | model 自己跑的 shell 不许联网（hosted image_generation 不走这条网络通道，照样能跑） |
+| `base-instructions` | 见下方模板字符串 | 把"只生图，不准改源代码 / 不准 npm install / 不准 git commit"作为系统指令钉死，比放在 user prompt 里更稳 |
+
+> 关于"硬性只读"：codex 没有提供"只允许 image_generation、其他全禁"的开关——它的 sandbox 是粒度到 shell / 文件系统的。但 **cwd + writable_roots + base-instructions 三件套已经足够**：cwd 限定写入域，writable_roots 显式枚举例外，base-instructions 在 prompt 层钉边界。subagent 自己也是另一道闸：主 agent 设计的 task prompt 里没让它做的事它就不会做。
+
+**subagent prompt 模板**（拷给 `task` 工具的 `prompt` 参数）：
+
+```text
+你的唯一职责：调用 codex MCP 工具生成 <资产名>，按指定路径落盘，回报文件路径。
+
+【项目背景】
+QCFD 2026 是流体力学量子计算前沿研讨会的官方静态站。技术栈 React 19 + Vite + Tailwind v4 +
+shadcn。视觉语言：深色 #0b0f17 底，aurora 渐变（量子蓝 #38bdf8 + 青 #22d3ee + 紫 #a78bfa），
+学术海报观感。资产约定：原始 PNG 归档到 _archive/generated/<asset>-v<N>.png（不进 git），
+压缩 WebP 上线版落 public/<asset>.webp。
+
+【本轮任务】
+<具体要什么图：用途 / 尺寸 / 构图约束 / 标题留白区坐标 / alpha 兜底层>
+
+【硬约束】
+- 必须使用 codex MCP 的 hosted image_generation（不是 Pillow 拼裁旧素材，也不是写 Python 调
+  openai.images.generate）。Pillow 仅允许用于后处理（裁切、加 alpha、压 WebP）。
+- 不要改 src/ 下任何 React 代码、CSS 主题 token、package.json、vite.config.ts。
+- 不要 git add / git commit。
+- 不要 npm install / bun install / pixi add。
+
+【调 codex MCP 时必传的参数】
+{
+  "approval-policy": "never",
+  "sandbox": "workspace-write",
+  "cwd": "<repo>/_archive/generated",
+  "config": {
+    "sandbox_workspace_write": {
+      "writable_roots": ["<repo>/public"],
+      "network_access": false
+    }
+  },
+  "base-instructions": "You are a single-purpose image generation agent. You may ONLY:
+    (1) call hosted image_generation; (2) run Pillow for post-processing (crop/alpha/webp);
+    (3) write the resulting files into the cwd or writable_roots. You MUST NOT modify any
+    source code, run package managers, or make git commits."
+}
+
+【完成后回报格式】
+- 生成的文件绝对路径（PNG 原图 + WebP 上线版）
+- codex 用了几次 image_generation 调用、是否走了 Pillow 后处理
+- 任何 sandbox 拒绝的写入尝试（如果有，主 agent 需要知道）
+```
+
+**主 agent 怎么对接**：
+
+1. `task(agent_type="general-purpose", mode="background", name="hero-regen", prompt=<上面模板>)` 拿到 `agent_id`。
+2. 主 agent 立刻回去干别的事（归档 `_archive/screenshots/hero-mobile-vN.png`、起草下一轮 prompt、和用户同步本轮 ✗ 项）。**不要主动 read_agent 轮询**——会有自动通知。
+3. 收到完成通知 → `read_agent(agent_id, wait=true)` 一次拿全文。如果 subagent 报告 sandbox 拒绝过写入，按它的描述决定是放宽 `writable_roots` 还是收紧 prompt。
+4. 接管最后一公里：`bun run build` → playwright 截图 → 7.6 那套对照验证 → 报给用户。
+
+**为什么不让 subagent 自己 build + 截图**：subagent context 越纯越好——它的输出物只有"图片文件 + 一段日志"，主 agent 才掌握用户审美反馈这条主线。subagent 自己跑 build / 截图会把它的 context 拖长，下一轮迭代 `codex-reply` 续 thread 也变难（threadId 在 codex 进程里，subagent 退出 thread 还在，但主 agent 拿不到 subagent 当时的 context）。
+
+**threadId 续 thread 怎么跨 subagent**：第一次 subagent 跑完，让它在回报里**带上 codex 返回的 `threadId`**；下一轮主 agent 起新 subagent 时把 threadId 喂进 prompt，让新 subagent 调 `codex-reply` 而不是 `codex`，codex 进程那侧的设计决策 / Pillow 脚本 / @media 规则就接得上。
+
+**适用范围**：本节专为生图设计。其他需要 codex 能力（长 review / 跨 model 接力）但**不需要 hosted 工具**的场景，直接同步调 codex MCP 反而更轻——同步等几十秒换一次完整结构化回复，开 subagent 反而在加层。
+
+### 8.7 信息图 / 装饰地图：用真实数据先渲参考底图，再让 codex 艺术化
+
+**痛点**：直接让 gpt-image-2 凭空画地图（"画一张合肥地图，标 4 个交通枢纽"）效果很差——Chaohu 长江走向乱、站点位置随机、中文站名糊。模型没有地理常识，也没有任何参考能锚定。
+
+**这次 traffic-map.webp 用的多工具叠层**（git log `feat(traffic): 加合肥三大枢纽水彩示意图...` 那条 commit）：
+
+```text
+1. Nominatim (curl)              ← geocode 翡翠湖迎宾馆 / 新桥机场 / 合肥南站 / 合肥站 真实 GPS
+2. staticmap + OSM tile (uv run) ← 拉真实路网 + 水系 + auto-fit 4 个 marker 的最小外接框
+3. playwright fullPage 截图       ← 把站点本身全屏截下来，作为"风格参考"
+4. codex CLI -i 双图入参           ← 同时喂 (1+2) 几何参考 + (3) 风格参考给 image_gen
+   sandbox=workspace-write
+   approval-policy=never
+5. Pillow lossy WebP (uv run)    ← q=82 method=6 max-width 1280 → 5.5% 体积
+```
+
+每步的关键细节：
+
+#### Step 1 — Nominatim 真实地理坐标
+
+不要相信模型对地理常识的"印象"。**所有 marker 坐标必须能通过 Nominatim 反查验证**：
+
+```bash
+UA='qcfd2026-site-traffic-map/1.0 (chenzhaoyun.com agent)'
+for q in "翡翠湖迎宾馆 合肥" "合肥新桥国际机场" "合肥南站" "合肥站 庐阳"; do
+  echo "=== $q ==="
+  curl -sS -H "User-Agent: $UA" -G \
+    --data-urlencode "q=$q" \
+    --data-urlencode "format=json" \
+    --data-urlencode "limit=2" \
+    "https://nominatim.openstreetmap.org/search" | \
+    python3 -c "import sys,json; [print(f'  {r[\"lat\"]:>9} {r[\"lon\"]:>10}  {r[\"display_name\"][:120]}') for r in json.load(sys.stdin)]"
+  sleep 1.2
+done
+```
+
+注意：
+- Nominatim **必须设 `User-Agent`**（标识应用 + 联系方式），否则 403
+- **请求间 `sleep 1.2`** 满足 1 req/s 上限，多个站点串行别并发（并发会触发 429 — 跟 web_fetch 那次同样的坑）
+- 比较模型估的坐标 vs Nominatim 实测，本次 venue 误差 ~3.8 km、合肥站误差 ~200 m——肉眼"凭印象"够给方向感但不够给生图
+
+#### Step 2 — staticmap 渲 OSM tile 作几何参考
+
+`staticmap` 是个 ~150 行的 Python 库，直接拉 OSM 的官方 tile（CDN，跟 `web_fetch` 那个被 429 的 search endpoint 不是一条路），不需要 key：
+
+```python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["staticmap>=0.5.7", "Pillow>=10"]
+# ///
+"""PEP 723 inline metadata，uv run 单文件即可，不污染项目依赖"""
+from staticmap import StaticMap, CircleMarker, Line
+
+VENUE = (117.1843, 31.7745)   # Nominatim 反查
+AIRPORT = (116.9678, 31.9883)
+SOUTH = (117.2846, 31.8022)
+NORTH = (117.3119, 31.8879)
+
+m = StaticMap(1536, 1024, url_template="https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+
+# routes: hub → venue (drawn first so they sit under markers)
+m.add_line(Line([AIRPORT, VENUE], "#f59e0b", 6))
+m.add_line(Line([SOUTH, VENUE], "#38bdf8", 6))
+m.add_line(Line([NORTH, VENUE], "#38bdf8", 6))
+
+# markers (color, radius)
+m.add_marker(CircleMarker(AIRPORT, "#f59e0b", 22))
+m.add_marker(CircleMarker(SOUTH,   "#38bdf8", 22))
+m.add_marker(CircleMarker(NORTH,   "#38bdf8", 22))
+m.add_marker(CircleMarker(VENUE,   "#a78bfa", 32))   # venue 加大显著
+
+img = m.render()   # 不传 zoom，自动 fit 所有 marker 的最小外接框
+img.save("/tmp/hefei-traffic-ref.png", optimize=True)
+```
+
+跑：`uv run hefei-mapref.py`。
+
+关键：
+- **`m.render()` 不传 `zoom`**——staticmap 自动算出装下所有 marker 的最大放大，外圈不留无意义空白。`zoom=10` 这种硬编码会留出大半张图的浪费区域
+- **画幅顶到 gpt-image-2 上限 1536×1024**——下游生图保留同样画幅，几何对应关系不损失
+- **markers 用最终目标的颜色**（cyan #38bdf8 / amber #f59e0b / violet #a78bfa）——参考图的色卡 = 生图的色卡，模型不用"翻译"
+- **routes 先画后画 markers**：staticmap 按 `add_*` 顺序栈叠，先画的在底——routes 在 marker 下面，不会被遮
+
+#### Step 3 — playwright fullPage 截图作风格参考
+
+`page.screenshot({ fullPage: true })` 把整个站点截下来，**这是"网页本身长什么样"的唯一可靠 ground truth**——比手动描述"我们用了 Tailwind v4 + 深蓝 + cyan + violet"准确得多。模型看图比读 prompt 描述更直观。
+
+#### Step 4 — codex CLI 双图入参 + sandbox
+
+**为什么是 codex CLI 而不是 codex MCP**：本节工作流要喂**两张参考图**给 codex（geometry ref + style ref），codex MCP 没有"附件"参数，只能在 prompt 里写文件路径让 codex 自己 view；CLI 的 `-i/--image` 是原生附件传输，模型直接看到图。
+
+```bash
+codex exec \
+  --sandbox workspace-write \
+  --dangerously-bypass-approvals-and-sandbox \
+  -i /tmp/hefei-traffic-ref.png \
+  -i /tmp/site-style-ref.png \
+  - < /tmp/codex-traffic-prompt.md
+```
+
+prompt（`/tmp/codex-traffic-prompt.md`）要塞够：
+- **项目背景**（QCFD 2026 是什么、受众）
+- **明示两张 reference 各自的角色**："REFERENCE 1 = 几何 ground truth (位置)" / "REFERENCE 2 = 风格 ground truth (色卡 / 调性)"
+- **真实色卡**——直接把 `src/index.css` `@theme {}` 里的真值贴进去（`--color-bg = #f7f9fc` 等），不要模型自己揣测
+- **画幅 1536×1024 顶满**——跟 reference 1 一致，几何对应关系完整
+- **多文字标签必须显式列出** + `EXACTLY 4 labels, NEVER 5, NEVER 8`，针对 gpt-image-2 经常重复 / 漏标的弱点
+- **走 nohup 后台 + 轮询**，不走 MCP（MCP 默认 ~60s 超时干掉 codex 的 reasoning 阶段，本次实测 codex 拍板生图前会先 view 两张参考、思考 3-5 分钟）
+
+#### Step 5 — Pillow lossy WebP
+
+```python
+img = Image.open(src).convert("RGB")
+if img.size[0] > 1280:
+    img = img.resize((1280, round(img.size[1] * 1280 / img.size[0])), Image.Resampling.LANCZOS)
+img.save(dst, format="WEBP", quality=82, method=6)
+# 2.7 MB PNG → 149 KB WebP，5.5%
+```
+
+跟 §bf8543f banner 转换约定一致：q=82 / method=6 / max-width 1280。
+
+#### 整体取舍
+
+- **三层参考叠在一起**（坐标 + 几何 + 风格）才能让模型既"画对位置"又"配对页面"——任何一层缺位，结果都会偏。
+- **每层都用最简单的成熟工具**（Nominatim / staticmap / playwright / codex CLI / Pillow），不自造轮子；都用 `uv run` PEP 723 inline metadata 跑，不污染项目依赖（`pixi.toml` / `package.json` 都不动）。
+- **几何 reference 可以一次复用**：换个底图风格只改 codex prompt + 复用同一张 `hefei-traffic-ref.png`，不用重跑 OSM 渲染。
+- **不要让 codex 自己跑 staticmap**：codex 沙箱里 `pixi`/`uv` 不在 PATH 时 staticmap 跑不起来，且 codex 会反复重试浪费 reasoning 时间。把"真实数据 → 几何参考"在主 agent 这边离线跑好，丢给 codex 的就只是图。
 
 ---
 
