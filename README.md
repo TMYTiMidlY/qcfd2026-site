@@ -149,8 +149,9 @@ qcfd2026-site/
 
 - **`_sources/` — 会议方提供的原始素材**。任何被 `SOURCES.md` 标为 🟢「会议方」的字段，都必须能在这个目录里找到对应的 docx / xlsx / doc 原文件。换新机上克隆仓库的人需要自己从飞书 / 邮件 / U 盘把 `_sources/` 灌好；本仓库不替他备份这些受版权 / 隐私限制的原稿。
 - **`_archive/` — 一切被取代但又不愿意彻底丢的产物**：
-  - `_archive/generated/`：gpt-image-2 生图历史，含每个 banner 被取代前的版本；以及 4 张图早期 PNG 高清原稿（在用的是 lossy webp 压过的）
-  - `_archive/screenshots/`：playwright 自检产出的、值得长期归档的截图（codex 出图原图、设计回滚对照图等）
+  - `_archive/generated/`：AI 生图历史（gpt-image-1 / gpt-image-2 等），含每个 banner 被取代前的版本；以及早期 PNG 高清原稿（在用的是 lossy webp 压过的）
+  - `_archive/screenshots/`：playwright 自检产出的截图（桌面端 / 移动端 / 迭代对比图 / codex 出图原图等）
+  - **不要 `trash-put` / `rm` 截图和 AI 生图**——被取代的截图、中间迭代截图、codex 生成的图片全部 `mv` 到 `_archive/screenshots/` 或 `_archive/generated/`，保留完整迭代历史，便于回溯和对比
   - 短期临时截图直接落 `.playwright-mcp/`（`.gitignore` 里另立一项），不在 `_archive/`
 - **不要**把这两个目录的文件 commit 进仓——审查时 `git status` 看到 `??` 也要保持忽略。
 - **不要**让 `src/` 直接 import `_sources/` 或 `_archive/` 的内容——它们是参考资料而非运行时资产。运行时图必须放在 `public/` 里。
