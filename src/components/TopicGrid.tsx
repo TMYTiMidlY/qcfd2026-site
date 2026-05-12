@@ -16,7 +16,7 @@ export function TopicGrid() {
       <div className="container-page">
         <figure className="relative -mx-4 mb-10 overflow-hidden rounded-3xl sm:-mx-6 md:mx-0">
           <img
-            src="/generated/topics-banner.png"
+            src="/generated/topics-banner.webp"
             alt=""
             loading="lazy"
             decoding="async"

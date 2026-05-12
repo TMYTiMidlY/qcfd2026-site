@@ -39,7 +39,7 @@ export function Header() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <a href="#home" className="flex items-center gap-2.5 group">
           <img
-            src="/generated/qcfd-logo.png"
+            src="/generated/qcfd-logo.webp"
             alt="QCFD"
             width={36}
             height={36}

@@ -41,7 +41,7 @@ export function Hero() {
       <div className="container-page relative">
         <figure className="relative -mx-4 mb-2 sm:-mx-6 md:mx-0 md:mb-4">
           <img
-            src="/generated/hero-poster.png"
+            src="/generated/hero-poster.webp"
             alt="QCFD 2026 流体力学量子计算前沿研讨会，2026 年 5 月 22-24 日 · 合肥翡翠湖迎宾馆"
             className="block w-full h-auto mask-fade-edges-soft"
             decoding="async"

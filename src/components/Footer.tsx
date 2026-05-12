@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <img
-              src="/generated/qcfd-logo.png"
+              src="/generated/qcfd-logo.webp"
               alt="QCFD"
               width={56}
               height={56}

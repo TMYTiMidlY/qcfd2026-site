@@ -148,7 +148,7 @@ export function VenueMap() {
 
         <div className="mt-8 overflow-hidden rounded-2xl">
           <img
-            src="/generated/venue-hefei.png"
+            src="/generated/venue-hefei.webp"
             alt=""
             loading="lazy"
             decoding="async"
