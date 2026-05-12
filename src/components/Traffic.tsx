@@ -101,6 +101,19 @@ export function Traffic() {
           </div>
         </div>
 
+        <figure className="relative mx-auto mt-10 max-w-4xl">
+          <img
+            src="/generated/traffic-map.webp"
+            alt="合肥三大交通枢纽（新桥机场、合肥南站、合肥站）抵达翡翠湖迎宾馆的相对位置示意"
+            loading="lazy"
+            decoding="async"
+            className="block aspect-[3/2] w-full rounded-3xl object-cover ring-1 ring-black/[0.04] mask-fade-edges-soft"
+          />
+          <figcaption className="sr-only">
+            合肥三大交通枢纽至翡翠湖迎宾馆的示意图（编辑插画，非实景导航图，下方各卡片含逐条路线）
+          </figcaption>
+        </figure>
+
         <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {traffic.map((t) => {
             const Icon = iconMap[t.icon]

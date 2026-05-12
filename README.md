@@ -148,8 +148,15 @@ pixi run bun run dev -- --host          # 同时监听 0.0.0.0，局域网/对�
 pixi run bun run build                  # 生产构建 → dist/（含 tsc -b 类型检查）
 pixi run bun run preview                # 本地预览 dist/（默认 4173）
 pixi run bun run preview -- --host 0.0.0.0 --port 8888   # 指定地址端口
-pixi run bunx --bun tsc --noEmit        # 仅类型检查（package.json 没有 tsc 脚本，走 bunx）
+pixi run bunx --bun tsc -b              # 仅类型检查
 ```
+
+> **dev server 的常驻入口是 systemd unit（下一节），手动 `bun run dev` 只在以下场景用**：
+>
+> - 临时改 vite/tsconfig 想看错误日志直接打到终端
+> - 在 **git worktree** 里干活（worktree 的 `WorkingDirectory` 跟 systemd unit 不一样，不能复用 master 的 service；这种时候手动起到一个不冲突的端口，比如 `--port 9000`，**用完关掉**）
+>
+> 默认 master 分支上做改动 → 不要再开第二个 dev server，直接看 8888，HMR 已经把改动推过去了。
 
 ### 加新 shadcn 组件
 
@@ -159,6 +166,32 @@ pixi run bunx --bun shadcn@latest add <component> -y
 ```
 
 `-y` 跳过交互；组件源码会被拷到 `src/components/ui/`，自由修改。
+
+### dev server 常驻 — systemd user service（**默认入口**）
+
+为什么用 service 而不是手动 `bun run dev`：
+
+- agent 截图、自检、随时打开浏览器都依赖 `http://localhost:8888/` 是活的；手动一终端关掉就断
+- 多个 agent 会话并存时，一份 service 即可，不会冒出 N 个 8888 抢端口
+- 重启 / 注销不丢
+
+一次性安装：
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/qcfd2026-site.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now qcfd2026-site.service
+systemctl --user status qcfd2026-site.service     # active (running)
+journalctl --user -u qcfd2026-site.service -f     # 实时日志
+loginctl enable-linger $USER                      # 注销后也保持运行
+```
+
+unit 文件已 commit 在 `systemd/qcfd2026-site.service`，仅 7 行 ExecStart（`pixi run bun run dev`）。绝对路径里 `WorkingDirectory=<YOUR_REPO_PATH>` 是本机，**克隆到别处后改成你机器上 master worktree 的实际路径**。
+
+> ⚠️ **唯一例外是 git worktree**：worktree 的 cwd 不等于 master 的 `WorkingDirectory`，systemd service 看不到 worktree 的代码。在 worktree 里临时改东西，要么 `bun run dev -- --port 9100` 自起一个独立端口（用完关掉），要么把改动 merge / cherry-pick 回 master，让现成的 8888 service 接管。**不要在 worktree 上偷偷起第二个 8888**，HMR 抢端口、agent 看到老分支结果、还自己骗自己"看到了"。
+>
+> 这是开发期便利，**不要在生产服务器**上这么跑（vite dev 走 esbuild + 内存，只适合本地）；生产部署看 §六。
 
 ---
 
@@ -368,6 +401,91 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 
 > 自我克制：不要为了"看着 OK"反复猜微调。**先用文字说出"我以为它会怎样"**，
 > 截图打开后逐项 √ / ✗ 对照，发现 ✗ 才动手；否则容易陷入像素级别的无效调参。
+
+### 7.7 截图前等所有图片加载完成
+
+`page.goto()` 或 `take_screenshot` 立刻拍，会拍到 `loading="lazy"` 还没解码、`@font-face` 还没换字体、CSS background-image 还没拉的"半成品"页面。社区/官方共识是组合三步：
+
+1. **`waitForLoadState('networkidle')`** —— 网络静默 500ms 以上，覆盖 fetch / XHR / 普通 img / CSS background-image。
+2. **滚到目标 section / fullPage 滚一遍** —— 强制触发 `loading="lazy"` 的图入场；不滚到永远不发请求。
+3. **逐个 `<img>` 等 `complete && naturalWidth > 0`** —— `networkidle` 可能在 lazy 图请求发出**之前**就 idle 了；最后再硬等 DOM 里所有 `<img>` 真的解完。
+
+```js
+// 在 playwright-browser_evaluate 里跑
+async () => {
+  // (1) 网络静默
+  await new Promise(r => setTimeout(r, 200))   // 让事件循环转一圈先
+  // (2) 滚一遍触发 lazy
+  await new Promise(resolve => {
+    let y = 0
+    const step = () => {
+      window.scrollTo(0, y)
+      y += window.innerHeight * 0.8
+      if (y < document.body.scrollHeight) requestAnimationFrame(step)
+      else { window.scrollTo(0, 0); resolve() }
+    }
+    step()
+  })
+  // (3) 等所有 img.complete
+  await Promise.all(
+    Array.from(document.images).map(img =>
+      img.complete && img.naturalWidth > 0
+        ? Promise.resolve()
+        : new Promise(r => {
+            img.addEventListener('load',  r, { once: true })
+            img.addEventListener('error', r, { once: true })
+          })
+    )
+  )
+  // (4) 等字体解完
+  if (document.fonts && document.fonts.ready) await document.fonts.ready
+}
+```
+
+然后再 `take_screenshot`。MCP 调用顺序：
+
+```text
+playwright-browser_navigate   <url>
+playwright-browser_wait_for   text="预期出现的某个文案" 或 time=2
+playwright-browser_evaluate   function=<上面那段>
+playwright-browser_take_screenshot ...
+```
+
+> `wait_for` 工具自身有 text / time 等模式，能省一次 evaluate；但对"图都加载完"这种诉求 `evaluate` 那一段是兜底。
+
+如果只关心一个 section 的图（比如只截 `#topics`），把第 (2) 步改成 `document.querySelector('#topics').scrollIntoView({block: 'start'})` 即可，比 fullPage 滚动快。
+
+#### 复盘：为什么"看上去截了，图却不在"
+
+2026-05-12 一次实战栽坑：改了 Traffic.tsx 加 `<img src="/generated/traffic-map.webp">`，立即 `navigate + take_screenshot`，截出来的图里**完全没有**那张地图。当时一度怀疑是 worktree 分支错配 / dev server 端口冲突 / 缓存——全部都不是。
+
+真正原因：**Vite cold start 第一次加载会触发依赖 re-optimize，HTML 200 返回 ≠ React 已 mount + `<img>` 已解码**。`navigate` 一返回就立刻截，恰好截到"DOM 在但图还在 304/pending"的瞬间，浏览器画面是占位空白；同样的代码，前面跑一遍上面那段 `evaluate` 之后，图就在了。
+
+教训：截图前等图片加载完 **不是优化**，是**正确性必需**。别用"网页打开了应该就能看见"这种人类直觉来推断 playwright 行为——它不刷新、不等待，是个高速快门。
+
+#### 截 element 时的 fixed-header 重影问题
+
+`page.locator('section#xxx').screenshot()` 拍一个比视口高的 element，playwright 会**滚动 + 多视口拼接**。如果页面上有 `position: fixed` 的 Header / 浮动按钮，**每个视口都会拍到一份**——拼接出来就是「页面中间横着一条 Header」的鬼图。
+
+修法：截图前临时藏掉 fixed 元素，截完恢复。
+
+```js
+// 截图前
+await page.evaluate(() => {
+  const h = document.querySelector('header')
+  if (h) h.style.display = 'none'
+})
+await page.locator('section#traffic').screenshot({ path: '...png' })
+// 截图后恢复
+await page.evaluate(() => {
+  const h = document.querySelector('header')
+  if (h) h.style.display = ''
+})
+```
+
+也可以用 `page.screenshot({ mask: [page.locator('header')] })` 让 playwright 在拼接时把 header 区域涂粉色——但 mask 会留下色块，不如 `display: none` 干净。
+
+> 这个问题只在拼接（element 高于 viewport）时出现。fullPage 截图也会拼接，但 fullPage 模式下 playwright 自己处理 fixed 元素：默认只在拼好的图最上方保留一份，下方都隐藏。**所以 fullPage 不需要手动 hide header；只有 `locator(...).screenshot()` 拍超长 element 才需要。**
 
 ---
 
