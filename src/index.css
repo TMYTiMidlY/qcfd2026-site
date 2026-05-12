@@ -166,14 +166,12 @@
 }
 
 @utility mask-fade-edges-soft {
-  -webkit-mask-image:
-    linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%),
-    linear-gradient(180deg, black 0%, black 85%, transparent 100%);
-  -webkit-mask-composite: source-in;
-          mask-image:
-    linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%),
-    linear-gradient(180deg, black 0%, black 85%, transparent 100%);
-          mask-composite: intersect;
+  /* 单层垂直渐变：顶部和底部各自淡出 ~6% / ~12%。
+   * 故意不用 mask-composite + 双层 mask —— Chromium 在 mobile WebView 与
+   * 部分 Android 浏览器对双层 mask 的 intersect 合成时常表现为完全无效，
+   * 退化成原图硬切。单层多 stop 是兼容性最稳的写法。 */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 6%, black 88%, transparent 100%);
+          mask-image: linear-gradient(180deg, transparent 0%, black 6%, black 88%, transparent 100%);
 }
 
 @keyframes pulse-glow {

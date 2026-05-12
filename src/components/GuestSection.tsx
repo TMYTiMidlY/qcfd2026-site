@@ -43,11 +43,11 @@ export function GuestSection() {
           <span className="text-xs text-fg-muted">3 位特邀嘉宾</span>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid items-stretch gap-6 md:grid-cols-3">
           {guests.map((g) => (
             <article
               key={g.id}
-              className="group relative card-surface overflow-hidden p-7 transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(124,58,237,0.4)]"
+              className="group relative card-surface flex h-full flex-col overflow-hidden p-7 transition hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(124,58,237,0.4)]"
             >
               <div
                 className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-secondary/60 to-transparent"
@@ -68,7 +68,7 @@ export function GuestSection() {
                 {g.affiliation}
               </p>
               {g.bio ? (
-                <p className="mt-5 line-clamp-7 text-sm leading-relaxed text-fg-soft/90">
+                <p className="mt-5 flex-1 text-sm leading-relaxed text-fg-soft/90">
                   {g.bio}
                 </p>
               ) : null}
