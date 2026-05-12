@@ -34,7 +34,7 @@ export function GuestSection() {
           <div>
             <span className="eyebrow-en">Honored Guests</span>
             <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-              特邀嘉宾
+              <a href="#guests" className="hover:text-primary/80 transition">特邀嘉宾</a>
             </h2>
             <p className="mt-3 max-w-xl text-fg-soft">
               本届会议邀请的院士与资深学者，覆盖量子信息、流体力学与量子计算等方向。

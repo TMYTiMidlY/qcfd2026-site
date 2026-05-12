@@ -20,22 +20,33 @@ export function TopicGrid() {
             alt=""
             loading="lazy"
             decoding="async"
-            className="aspect-[3/1] w-full object-cover md:aspect-[16/5]"
+            className="aspect-[2/1] w-full object-cover sm:aspect-[3/1] md:aspect-[16/5]"
           />
+          {/* Desktop: text overlay on image */}
           <div
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-bg/85 via-bg/10 to-transparent"
+            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-t from-bg/85 via-bg/10 to-transparent md:block"
             aria-hidden
           />
-          <figcaption className="absolute inset-x-0 bottom-0 px-6 pb-6 md:px-10 md:pb-8">
+          <figcaption className="absolute inset-x-0 bottom-0 hidden px-10 pb-8 md:block">
             <span className="eyebrow">议题方向</span>
-            <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-              围绕六大方向 · 推动学科交叉
+            <h2 className="mt-3 text-4xl font-bold text-fg">
+              <a href="#topics" className="hover:text-primary/80 transition">围绕六大方向 · 推动学科交叉</a>
             </h2>
             <p className="mt-3 max-w-2xl text-fg-soft">
               会议聚焦量子算法、量子-经典混合方法、硬件实现以及智能赋能等核心议题，汇聚流体力学与量子计算交叉研究的最新成果。
             </p>
           </figcaption>
         </figure>
+        {/* Mobile: text below image */}
+        <div className="mb-8 md:hidden">
+          <span className="eyebrow">议题方向</span>
+          <h2 className="mt-3 text-3xl font-bold text-fg">
+            <a href="#topics" className="hover:text-primary/80 transition">六大议题方向</a>
+          </h2>
+          <p className="mt-3 text-fg-soft">
+            聚焦量子算法、混合方法、硬件实现与智能赋能，汇聚交叉研究最新成果。
+          </p>
+        </div>
 
         <div className="mt-2 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {topics.map((t, idx) => {

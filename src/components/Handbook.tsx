@@ -43,7 +43,7 @@ export function Handbook() {
         <div className="max-w-2xl">
           <span className="eyebrow">资料下载</span>
           <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-            会议手册与资料
+            <a href="#handbook" className="hover:text-primary/80 transition">会议手册与资料</a>
           </h2>
           <p className="mt-3 text-fg-soft">
             正式资料将在会议召开前一周通过本页面与微信公众号同步发布，敬请期待。

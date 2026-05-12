@@ -11,6 +11,7 @@ const navLinks = [
   { href: '#topics', label: '议题方向' },
   { href: '#speakers', label: '特邀报告' },
   { href: '#schedule', label: '日程' },
+  { href: '#handbook', label: '资料下载' },
   { href: '#venue', label: '会议地点' },
   { href: '#traffic', label: '交通指南' },
   { href: '#news', label: '会议新闻' },
@@ -44,7 +45,7 @@ export function Header() {
             width={36}
             height={36}
             decoding="async"
-            className="size-9 rounded-xl object-cover shadow-lg shadow-primary/25 transition group-hover:shadow-primary/40"
+            className="size-9 object-cover"
           />
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-fg">

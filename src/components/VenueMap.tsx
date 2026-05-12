@@ -139,7 +139,7 @@ export function VenueMap() {
         <div className="max-w-2xl">
           <span className="eyebrow">会议地点</span>
           <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-            合肥翡翠湖迎宾馆
+            <a href="#venue" className="hover:text-primary/80 transition">合肥翡翠湖迎宾馆</a>
           </h2>
           <p className="mt-3 text-fg-soft">
             位于合肥翡翠湖畔，环境安静、配套完善。3 号楼为本次会议的主会场所在地。

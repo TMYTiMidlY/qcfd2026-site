@@ -8,7 +8,7 @@ export function NewsList() {
         <div className="max-w-2xl">
           <span className="eyebrow">会议新闻</span>
           <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-            最新通知与往届回顾
+            <a href="#news" className="hover:text-primary/80 transition">最新通知与往届回顾</a>
           </h2>
           <p className="mt-3 text-fg-soft">
             通过微信公众号同步发布大会通知，欢迎关注以获取最新动态。

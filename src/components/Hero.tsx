@@ -106,7 +106,7 @@ export function Hero() {
             </Button>
           </div>
 
-          <div className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur">
+          <div className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur max-sm:mt-8 max-sm:gap-x-2 max-sm:border-transparent max-sm:bg-white/40 max-sm:px-3 max-sm:py-2 max-sm:shadow-none max-sm:text-sm">
             {isPast ? (
               <span className="text-sm text-fg">会议正在进行，欢迎现场交流</span>
             ) : (

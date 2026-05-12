@@ -89,7 +89,7 @@ export function Traffic() {
         <div className="max-w-2xl">
           <span className="eyebrow">交通指南</span>
           <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-            从机场 / 高铁站抵达会场
+            <a href="#traffic" className="hover:text-primary/80 transition">从机场 / 高铁站抵达会场</a>
           </h2>
           <p className="mt-3 text-fg-soft">
             合肥有 1 个民用机场与 2 个主要火车站，均可便捷抵达翡翠湖迎宾馆。以下路线由会务组整理，里程、时长、费用为平峰估算，仅供参考。

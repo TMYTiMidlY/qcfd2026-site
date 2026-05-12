@@ -135,7 +135,7 @@ export function SpeakerGrid() {
           <div>
             <span className="eyebrow-en">Distinguished Speakers</span>
             <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
-              特邀报告讲者
+              <a href="#speakers" className="hover:text-primary/80 transition">特邀报告讲者</a>
             </h2>
             <p className="mt-3 max-w-2xl text-fg-soft">
               来自高校、科研院所与产业界的专家学者，分享流体力学量子计算的前沿算法、硬件实现与产业化进展。点击头像查看报告题目、简介与摘要。

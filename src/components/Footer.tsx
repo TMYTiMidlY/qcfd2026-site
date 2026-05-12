@@ -13,7 +13,7 @@ export function Footer() {
               width={56}
               height={56}
               decoding="async"
-              className="size-14 rounded-2xl object-cover shadow-lg shadow-primary/25"
+              className="size-14 object-cover"
             />
             <h3 className="mt-4 text-lg font-semibold text-fg">
               {conference.name}

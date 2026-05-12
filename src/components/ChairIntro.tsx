@@ -9,7 +9,9 @@ export function ChairIntro() {
       <div className="container-page">
         <div className="max-w-2xl">
           <span className="eyebrow-en">Conference Chair</span>
-          <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">大会主席</h2>
+          <h2 className="mt-3 text-3xl font-bold text-fg md:text-4xl">
+            <a href="#chair" className="hover:text-primary/80 transition">大会主席</a>
+          </h2>
           <p className="mt-3 text-fg-soft">
             本届会议由 {chair.name} 教授担任大会主席，统筹学术议程与嘉宾邀请。
           </p>
