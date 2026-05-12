@@ -223,7 +223,7 @@ export function TopicGrid() {
                 <button
                   type="button"
                   onClick={() => setOpenMobile(isOpen ? null : idx)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left sm:px-6 sm:py-5"
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60 sm:px-6 sm:py-5"
                   aria-expanded={isOpen}
                 >
                   <div
@@ -271,7 +271,7 @@ export function TopicGrid() {
         </div>
 
         {/* Cross-cutting note */}
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/15 bg-primary/[0.04] p-4">
+        <div className="mt-6 flex items-start gap-3 rounded-2xl info-tint p-4">
           <Layers className="mt-0.5 size-4 shrink-0 text-primary" />
           <p className="text-sm text-fg-soft">
             以上为本届会议的主要研讨方向，各方向之间互有交叉，分类仅供参考。<a

@@ -162,7 +162,7 @@ export function Traffic() {
           {trafficNotes.map((n, i) => (
             <div
               key={i}
-              className="flex items-start gap-2.5 rounded-2xl border border-primary/15 bg-primary/[0.04] p-4 text-sm text-fg-soft"
+              className="flex items-start gap-2.5 rounded-2xl info-tint p-4 text-sm text-fg-soft"
             >
               <Info className="mt-0.5 size-4 shrink-0 text-primary" />
               <span>{n}</span>
@@ -170,7 +170,7 @@ export function Traffic() {
           ))}
         </div>
 
-        <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-5 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col items-start gap-3 rounded-2xl info-tint p-5 sm:flex-row sm:items-center">
           <CloudSun className="size-6 shrink-0 text-primary" />
           <p className="text-sm text-fg-soft">
             <span className="font-medium text-fg">

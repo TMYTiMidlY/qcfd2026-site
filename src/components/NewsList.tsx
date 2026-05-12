@@ -22,7 +22,7 @@ export function NewsList() {
               href={item.url}
               target="_blank"
               rel="noreferrer"
-              className="group card-surface flex h-full flex-col overflow-hidden p-0 transition hover:-translate-y-1 hover:border-primary/40"
+              className="group card-surface flex h-full flex-col overflow-hidden p-0 transition hover:-translate-y-1 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
             >
               {item.thumbnail ? (
                 <img
