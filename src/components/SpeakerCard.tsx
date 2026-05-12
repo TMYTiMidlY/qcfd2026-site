@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Quote, Building2, UserRound } from 'lucide-react'
+import { Quote, Building2, UserRound, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Speaker } from '@/data/speakers'
 import { speakers } from '@/data/speakers'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -156,11 +157,20 @@ export function SpeakerGrid() {
       </div>
 
       <Dialog open={!!active} onOpenChange={(o) => !o && setActive(null)}>
-        <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-2xl card-surface text-fg">
+        <DialogContent
+          showCloseButton={false}
+          className="card-surface text-fg flex max-h-[calc(100dvh-1.5rem)] flex-col gap-0 overflow-hidden p-0 sm:max-h-[min(85dvh,720px)] sm:max-w-2xl"
+        >
+          <DialogClose
+            aria-label="关闭"
+            className="absolute right-3 top-3 z-20 grid size-10 place-items-center rounded-full bg-white/95 text-fg-muted shadow-md ring-1 ring-black/20 backdrop-blur transition hover:bg-white hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          >
+            <X className="size-4" />
+          </DialogClose>
           {active ? (
             <>
-              <DialogHeader>
-                <div className="flex items-start gap-4 pr-8">
+              <DialogHeader className="shrink-0 p-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-start gap-4 pr-12">
                   {active.photo ? (
                     <img
                       src={active.photo}
@@ -191,7 +201,7 @@ export function SpeakerGrid() {
                 </div>
               </DialogHeader>
 
-              <div className="space-y-6 text-sm leading-relaxed text-fg-soft">
+              <div className="flex-1 space-y-6 overflow-y-auto px-5 pb-5 text-sm leading-relaxed text-fg-soft sm:px-6 sm:pb-6">
                 {active.topic ? (
                   <div>
                     <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
