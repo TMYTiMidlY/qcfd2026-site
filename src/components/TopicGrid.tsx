@@ -40,38 +40,25 @@ export function TopicGrid() {
             decoding="async"
             className="aspect-[2/1] w-full object-cover sm:aspect-[3/1] md:aspect-[16/5]"
           />
-          {/* Desktop: centered text overlay with scrim */}
           <div
-            className="pointer-events-none absolute inset-0 hidden bg-black/30 md:block"
+            className="pointer-events-none absolute inset-0 bg-black/30"
             aria-hidden
           />
-          <figcaption className="absolute inset-0 hidden flex-col items-center justify-center text-center md:flex">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium tracking-wider text-white/90 backdrop-blur-sm">
+          <figcaption className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium tracking-wider text-white/90 backdrop-blur-sm sm:px-3 sm:py-1 sm:text-xs">
               议题方向
             </span>
-            <h2 className="mt-4 text-3xl font-bold text-white drop-shadow-lg lg:text-4xl">
+            <h2 className="mt-3 text-2xl font-bold text-white drop-shadow-lg sm:mt-4 sm:text-3xl lg:text-4xl">
               <a href="#topics" className="hover:text-primary transition">
                 主要议题方向
               </a>
             </h2>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80">
+            <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/80 sm:mt-3 sm:text-sm">
               围绕量子算法、量子-经典混合方法、硬件实现与智能赋能等方向，汇聚本届
               14 位报告人的交叉研究成果
             </p>
           </figcaption>
         </figure>
-        {/* Mobile: text below image */}
-        <div className="mb-8 md:hidden">
-          <span className="eyebrow">议题方向</span>
-          <h2 className="mt-3 text-3xl font-bold text-fg">
-            <a href="#topics" className="hover:text-primary/80 transition">
-              主要议题方向
-            </a>
-          </h2>
-          <p className="mt-3 text-fg-soft">
-            围绕量子算法、混合方法、硬件实现与智能赋能等方向，汇聚交叉研究最新成果。
-          </p>
-        </div>
 
         {/* Accordion */}
         <div className="space-y-3">
