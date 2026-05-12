@@ -111,22 +111,22 @@ export function TopicGrid() {
             alt=""
             loading="lazy"
             decoding="async"
-            className="aspect-[2/1] w-full object-cover sm:aspect-[3/1] md:aspect-[16/5]"
+            className="aspect-[16/5] w-full object-cover"
           />
           <div
             className="pointer-events-none absolute inset-0 bg-black/30"
             aria-hidden
           />
           <figcaption className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-medium tracking-wider text-white/90 backdrop-blur-sm sm:px-3 sm:py-1 sm:text-xs">
-              议题方向
+            <span className="hidden text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/85 drop-shadow md:block">
+              Research Topics
             </span>
-            <h2 className="mt-3 text-2xl font-bold text-white drop-shadow-lg sm:mt-4 sm:text-3xl lg:text-4xl">
+            <h2 className="text-2xl font-bold text-white drop-shadow-lg md:mt-3 md:text-3xl lg:text-4xl">
               <a href="#topics" className="hover:text-primary transition">
                 主要议题方向
               </a>
             </h2>
-            <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/80 sm:mt-3 sm:text-sm">
+            <p className="hidden max-w-xl text-sm leading-relaxed text-white/80 md:mt-3 md:block">
               围绕量子算法、量子-经典混合方法、硬件实现与智能赋能等方向，汇聚本届
               14 位报告人的交叉研究成果
             </p>
