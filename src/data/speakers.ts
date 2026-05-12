@@ -122,7 +122,7 @@ export const speakers: Speaker[] = [
     id: 'liu-jinpeng',
     photo: '/avatars/liu-jinpeng.webp',
     name: '刘锦鹏',
-    title: '研究员',
+    title: '助理教授',
     affiliation: '清华大学丘成桐数学科学中心',
     topic: 'Towards Practical Quantum Simulation of Non-unitary Dynamics',
     bio: '清华大学丘成桐数学科学中心助理教授、博士生导师，入选国家海外高层次人才引进计划。2022-2024 年于麻省理工与伯克利任博士后，2022 年博士毕业于马里兰大学。研究方向为量子科学计算与量子科学智能，发表 PNAS、Nat. Commun.、PRL、CMP、JCP、Quantum 等期刊及 NeurIPS、QIP、TQC 等会议，受到 Quanta、SIAM News、MATH+ 等媒体报道，获 ICCM 毕业论文金奖，担任量子信息权威期刊 Quantum 编委。',

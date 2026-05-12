@@ -4,13 +4,22 @@
  *       邀请报告完整版/会议日程v2.xlsx 「报告信息」表（两份内容一致）
  * 详见 SOURCES.md §6
  */
+export type ScheduleItem = {
+  time?: string
+  title: string
+  note?: string
+  speaker?: string
+  /** 标记本条开始一个新的主持时段，chair 为该时段主持人姓名 */
+  chair?: string
+}
+
 export type ScheduleDay = {
   date: string
   shortDate: string
   weekday: string
   shortWeekday: string
   label: string
-  items: { time?: string; title: string; note?: string; speaker?: string }[]
+  items: ScheduleItem[]
 }
 
 export const schedule: ScheduleDay[] = [
@@ -32,7 +41,7 @@ export const schedule: ScheduleDay[] = [
     shortWeekday: '周六',
     label: '学术会议',
     items: [
-      { time: '08:30–08:50', title: '嘉宾致辞', note: '主持：杨越' },
+      { time: '08:30–08:50', title: '嘉宾致辞', chair: '杨越' },
       {
         time: '08:50–09:15',
         title: '面向复合材料与结构的量子计算增强数据驱动计算力学',
@@ -54,7 +63,7 @@ export const schedule: ScheduleDay[] = [
         time: '10:35–11:00',
         title: 'Towards Practical Quantum Simulation of Non-unitary Dynamics',
         speaker: '刘锦鹏',
-        note: '主持：刘锦鹏',
+        chair: '刘锦鹏',
       },
       {
         time: '11:00–11:25',
@@ -72,7 +81,7 @@ export const schedule: ScheduleDay[] = [
         time: '13:30–13:55',
         title: '中性原子量子计算的产业化进展',
         speaker: '石志全',
-        note: '主持：叶创超',
+        chair: '叶创超',
       },
       {
         time: '13:55–14:20',
@@ -89,7 +98,7 @@ export const schedule: ScheduleDay[] = [
         time: '15:15–15:40',
         title: '一种适用于固体力学分析的量典融合方法：VQFEM',
         speaker: '吴锋',
-        note: '主持：牛小东',
+        chair: '牛小东',
       },
       {
         time: '15:40–16:05',
@@ -111,7 +120,7 @@ export const schedule: ScheduleDay[] = [
         title: '湍流场的几何量子化编码',
         speaker: '孟昭远',
       },
-      { time: '17:20–18:00', title: '自由讨论', note: '主持：杨越' },
+      { time: '17:20–18:00', title: '自由讨论', chair: '杨越' },
       { time: '18:00–20:00', title: '晚餐', note: '翡翠湖迎宾馆' },
     ],
   },
@@ -122,7 +131,7 @@ export const schedule: ScheduleDay[] = [
     shortWeekday: '周日',
     label: '参观与离会',
     items: [
-      { title: '参观、离会', note: '具体安排另行通知' },
+      { time: '09:30–11:00', title: '参观巢湖明月' },
     ],
   },
 ]
