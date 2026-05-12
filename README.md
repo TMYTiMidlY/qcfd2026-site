@@ -94,8 +94,23 @@ qcfd2026-site/
 ├── vite.config.ts                  # react + tailwindcss + @ alias
 ├── tsconfig.{json,app.json,node.json}
 ├── index.html                      # 引入 Inter + Noto Sans SC Google Fonts
+├── systemd/
+│   └── qcfd2026-site.service       # dev server 常驻 user unit（见 §四）
+├── _sources/                       # 【.gitignore】会议方原始素材（docx/xlsx/doc）
+│   ├── 邀请报告完整版/             #   主源：会议手册素材  0512.docx + 会议日程v2.xlsx
+│   │   ├── 会议手册素材  0512.docx #   + 14 份「报告人信息模板」原 doc
+│   │   ├── 会议日程v2.xlsx
+│   │   └── 邀请报告/
+│   └── 第三届流体力学量子计算前沿研讨会邀请报告/   # 历史源（二轮通知初稿）
+├── _archive/                       # 【.gitignore】不入 bundle 的归档物
+│   ├── generated/                  #   gpt-image-2 生图历史（被取代的 banner / 旧 logo / 旧 hero PNG 原图）
+│   │   ├── README.md               #   每条归档的来由 + 对应在用 .webp 的关系
+│   │   └── ...
+│   └── screenshots/                #   playwright 重要截图（hero 桌面 / 移动端 codex 出图等）
 ├── public/
-│   └── favicon.svg                 # 自绘量子原子图标
+│   ├── favicon.svg                 # 自绘量子原子图标
+│   ├── avatars/                    # 14 报告人 + 3 嘉宾 webp 头像
+│   └── generated/                  # 在用的 banner / logo .webp（仅在用，孤儿一律搬到 _archive/）
 └── src/
     ├── main.tsx / App.tsx          # 入口 + 11 个 section 组装
     ├── index.css                   # @import tailwindcss + tw-animate-css
@@ -127,6 +142,18 @@ qcfd2026-site/
             ├── badge.tsx
             └── dialog.tsx
 ```
+
+### 关于 `_sources/` 与 `_archive/`（**两个目录都不进 git**）
+
+两者通过 `.gitignore` 的 `_sources/` / `_archive/` 排除，**不进 bundle、不入 git 历史**。命名规约：
+
+- **`_sources/` — 会议方提供的原始素材**。任何被 `SOURCES.md` 标为 🟢「会议方」的字段，都必须能在这个目录里找到对应的 docx / xlsx / doc 原文件。换新机上克隆仓库的人需要自己从飞书 / 邮件 / U 盘把 `_sources/` 灌好；本仓库不替他备份这些受版权 / 隐私限制的原稿。
+- **`_archive/` — 一切被取代但又不愿意彻底丢的产物**：
+  - `_archive/generated/`：gpt-image-2 生图历史，含每个 banner 被取代前的版本；以及 4 张图早期 PNG 高清原稿（在用的是 lossy webp 压过的）
+  - `_archive/screenshots/`：playwright 自检产出的、值得长期归档的截图（codex 出图原图、设计回滚对照图等）
+  - 短期临时截图直接落 `.playwright-mcp/`（`.gitignore` 里另立一项），不在 `_archive/`
+- **不要**把这两个目录的文件 commit 进仓——审查时 `git status` 看到 `??` 也要保持忽略。
+- **不要**让 `src/` 直接 import `_sources/` 或 `_archive/` 的内容——它们是参考资料而非运行时资产。运行时图必须放在 `public/` 里。
 
 ---
 
@@ -213,6 +240,23 @@ unit 文件已 commit 在 `systemd/qcfd2026-site.service`，仅 7 行 ExecStart�
 5. **AI / 维护者自行检索 / 推断的内容**——优先级最低，仅在前述来源缺失时使用，且应在 `SOURCES.md` 标记为 ⚫「润色/编辑」或 🔴「占位/暂定」。
 
 > **歧义处理**：用户的说法如果含糊不清（例如只说"那个人的 title 不对"但没指明改成什么），不要自行猜测——用所在环境提供的提问工具（如 `ask_user`）向用户确认"是否以您本次说法为最高优先信息"，再落盘。
+
+### `SOURCES.md` 引用规范
+
+`SOURCES.md` 里的每一条「出处」必须**指向以下三类之一**，不允许指向"我记得 / 我以为 / 反正网上能查到"这种无主张的来源：
+
+| 类别 | 写法 | 例子 |
+|---|---|---|
+| **用户某时刻的口头/聊天确认** | "🟢 用户 `2026-05-11 19:19` 在会话中确认 …" | "🟢 用户 2026-05-11 15:53 在会话中确认倒计时锚定 08:30" |
+| **公开权威 URL / 公开资料** | 给出可点开的链接或权威机构名称 + 文档名 | "🟡 维基百科：合肥南站 / 2026-05 修订版"，附 URL |
+| **`_sources/` 内的具体文件路径** | 仓库相对路径 + 章节锚点 | "🟢 `_sources/邀请报告完整版/会议手册素材  0512.docx` 第三节日程表" |
+
+**禁止的写法**：
+- ❌ 引用 `/tmp/clipboard/...` 或 SSH 主机 `1810:/tmp/...` 这类**项目外**临时路径——这些文件可能随时丢失或被覆盖，写在 `SOURCES.md` 等于无来源
+- ❌ "我之前看到的"、"印象中"、"应该是" 这种没有时间锚 / 没有 URL / 没有文件的虚指
+- ❌ 引用 `_archive/` 内文件——`_archive/` 是被取代的产物，不是当前真相源
+
+> 历史教训（2026-05-12）：早期 `SOURCES.md` 引用的是 `1810:/tmp/clipboard/邀请报告完整版/`，agent 切机器或 1810 reboot 后路径不可达；现在已统一收口到 `_sources/`。**收到原始 docx → 立即放进 `_sources/`，再在 `SOURCES.md` 引这个仓库内路径**。
 
 ---
 
@@ -415,6 +459,13 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 > 自我克制：不要为了"看着 OK"反复猜微调。**先用文字说出"我以为它会怎样"**，
 > 截图打开后逐项 √ / ✗ 对照，发现 ✗ 才动手；否则容易陷入像素级别的无效调参。
 
+> **诚实读图陷阱（实战教训）**：`view` 工具确实把 PNG 解码成视觉输入塞进上下文，
+> agent 是真能"看到"像素的——但 agent 容易看完图后**按"我希望它是什么样"总结**，
+> 而不是按"实际看到什么像素"汇报。比如装饰图压住了标题、明显的中央亮带、
+> 文字与水波重叠抢戏，这些 ✗ 反而被包装成"装饰均匀分布、文字层次清晰"。
+> **强制做法**：每张截图开口先描述具体位置的具体内容（"H1 落在 x=Y 的水波纹理中央"
+> 而不是"H1 看起来很好"），再下判断。用户挑出 ✗ 时不要狡辩，承认看了但没诚实描述。
+
 ### 7.7 截图前等所有图片加载完成
 
 `page.goto()` 或 `take_screenshot` 立刻拍，会拍到 `loading="lazy"` 还没解码、`@font-face` 还没换字体、CSS background-image 还没拉的"半成品"页面。社区/官方共识是组合三步：
@@ -580,6 +631,38 @@ image_tokens ≈ width × height / 750
 
 > 一句话：**改像素尺寸，不是改格式**。一张图占 1M context 的千分之一到千分之五，循环跑 5 步 × 4 张图大概 2–3% context，不至于把对话喂爆——但 fullPage 长截图拼接出来超大的也不要无脑塞。
 
+### 7.9 视觉反馈通路：用户挑刺 → agent 复核 → codex 生图 → 再核
+
+7.6 是单 agent 单轮自审，但更现实的场景是：**用户对效果不满意，agent 要边迭代边把判断权交给会生图的 subagent**。本仓库 Hero 装饰图迭代这条线（参考 git log `feat(visual): regen Hero...` 系列）总结出的通路：
+
+```text
+用户文字反馈（"图压住标题了 / 接缝突兀 / 移动端左白右图很奇怪"）
+  ↓
+agent 起 dev → Playwright 桌面 + 移动各截一张
+  ↓
+agent 自己 view 截图，**逐条对照用户原话**，老实写出每条 ✓/✗
+  ↓
+✗ 项写成结构化 prompt（含约束、不要动的、验收标准）→ codex-reply 续 thread
+  ↓
+codex 调 image_gen / 改 CSS / 跑 build → MCP 可能 timeout 但 codex 后台已完成
+  ↓
+agent 不重启 codex，直接看 codex 的 jsonl rollout 拿当前进度（见 8.4）
+  ↓
+agent 接管最后的截图验证，再 view 一次老实描述 → 报给用户
+```
+
+几条只有踩过坑才知道的细节：
+
+- **截图必须归档不要 trash**：调试过程的桌面/移动截图存 `_archive/screenshots/`（`.gitignore` 已排除，不进 bundle 也不进 git），文件名带版本号 `hero-mobile-v3-seam.png`。一旦用户回头问"上一轮是什么样"，能立刻 `view` 对比。本仓库前几轮把临时截图 `trash-put` 掉，后面用户追问时不得不 `mv` 出来——白绕一圈。
+- **跨多轮迭代 codex 用 `threadId` 续 thread**：本仓库 Hero 装饰图三轮迭代（桌面横屏 → 修接缝 → 移动竖屏拉长）都在同一个 codex thread 里走 `codex-reply`，codex 自己保留前一轮的设计决策、Pillow 后处理脚本路径、`@media` 规则结构，不用每轮重新喂上下文。
+- **明确说"用你的生图能力"**：codex 默认会先尝试 Pillow 拼裁（成本低），不喊它就不会主动调 hosted `image_gen`。prompt 里要写 `**必须使用 image_gen 工具从头生成新图**，Pillow 只允许用于后处理（裁切、加 alpha、压 WebP）`。
+- **生图 prompt 的硬约束要顶在前面**：装饰图最容易翻车的是"装饰把标题区盖住"。codex 真实发出去的 `revised_prompt` 里关键句是 `The upper-left half of the canvas... must be almost empty negative space for large title text overlay`、`Do not place any visible object behind the upper-left title area`。把"不要"和"必须留白的位置坐标"用粗体或 hard constraints 段落顶到 prompt 顶部，比放在末尾"风格描述"里有效得多。
+- **生图后再做 alpha 标题保护层**：仅靠 prompt 约束有时候还是会有元素飘到留白区。本仓库 Pillow 后处理脚本里固定写一段 `protected_alpha = 0.035 + 0.965 * smoothstep(...)`，把生图结果的左上 / 上半部 alpha 强制压到 ~3.5%，作为"prompt 约束失败时的兜底"。
+- **MCP timeout 不等于 codex 失败**：本仓库 `.mcp.json` 已经把 codex 超时调到 5 分钟（见 8.4），一次 `image_gen` + 后处理 + build 通常 2-3 分钟够，但偶尔还是会 timeout。**这时不要重启 codex，去 `~/.codex/sessions/2026/MM/DD/rollout-*.jsonl` 看 jsonl，里面 `image_generation_call` / `function_call` / `function_call_output` 全程留痕**——通常工作已完成，只是响应丢了。
+- **诚实把 ✗ 报给用户**：本轮 Hero 装饰图迭代里多次发生"agent 看完截图按预期话术总结、用户一眼看出 ✗"。**不要怕承认**「我前几次没诚实描述像素」，比"再悄悄改一版希望蒙过去"健康得多——agent 的可信度建立在敢说"我错了"上面。
+
+适用范围：任何"agent 改完代码 / 资产、用户用眼睛验收、不满意要再迭代"的视觉任务（Hero 装饰图、Speaker 头像占位、Schedule 日历配色等）。纯逻辑改动 / 测试驱动的任务不需要这套。
+
 ---
 
 
@@ -656,6 +739,7 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 | 场景 | 这条路 vs 其他 |
 |---|---|
 | 生图 / 编辑图 | 唯一可行路径（host model 没这能力）|
+| 装饰资产横屏 / 竖屏构图迭代（Hero、Banner） | 比 Pillow 拼裁旧素材靠谱得多——直接 prompt 约束新构图 + alpha 保护标题区，见 7.9 |
 | 让 codex 用 GPT-5 系做长 review、自己再用 Sonnet 接力总结 | 比直接 `/model` 切换更灵活，可保留两条独立 thread |
 | 多轮迭代同一个 codex 上下文 | 用 `codex-reply` 带 `threadId`，session 状态在 codex 进程里维护 |
 | 仅仅想让 codex 跑一段命令并拿结果 | 直接 `!codex exec ...` 更轻；MCP 适合需要带回结构化结果或多轮的场景 |
