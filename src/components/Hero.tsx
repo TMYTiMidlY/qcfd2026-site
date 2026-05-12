@@ -26,9 +26,14 @@ export function Hero() {
   return (
     <section
       id="home"
-      className="relative isolate overflow-hidden pt-32 pb-24 md:pt-40 md:pb-32 bg-aurora"
+      className="relative isolate overflow-hidden flex items-center min-h-[100svh] py-24 md:py-28 bg-aurora"
     >
       <div className="absolute inset-0 bg-grid opacity-40" aria-hidden />
+      <div
+        className="hero-decor-bg pointer-events-none absolute inset-0"
+        aria-hidden
+      />
+      <div className="hero-bottom-fade pointer-events-none absolute inset-x-0 bottom-0" aria-hidden />
       <div
         className="pointer-events-none absolute -top-40 left-1/2 size-[700px] -translate-x-1/2 rounded-full opacity-50 blur-3xl"
         style={{
@@ -39,25 +44,24 @@ export function Hero() {
       />
 
       <div className="container-page relative">
-        <figure className="relative -mx-4 mb-2 sm:-mx-6 md:mx-0 md:mb-4">
-          <img
-            src="/generated/hero-poster.webp"
-            alt="QCFD 2026 流体力学量子计算前沿研讨会，2026 年 5 月 22-24 日 · 合肥翡翠湖迎宾馆"
-            className="block w-full h-auto mask-fade-edges-soft"
-            decoding="async"
-            fetchPriority="high"
-          />
-        </figure>
-
-        <div className="relative max-w-3xl">
-          <h1 className="sr-only">
-            流体力学量子计算前沿研讨会 · The 3rd QCFD · Quantum Computing for Fluid Dynamics · 2026.05.22 – 24 · 合肥翡翠湖迎宾馆
-          </h1>
-
+        <div className="max-w-3xl">
           <span className="eyebrow">
             <span className="size-1.5 rounded-full bg-primary animate-[pulse-glow_2.4s_ease-in-out_infinite]" />
             QCFD · {conference.edition}
           </span>
+
+          <h1 className="mt-6 text-4xl font-bold leading-[1.1] text-fg text-shadow-soft sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+            <span className="block">流体力学</span>
+            <span className="block bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+              量子计算前沿研讨会
+            </span>
+          </h1>
+          <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-[0.16em] text-primary/80 sm:text-xs sm:tracking-[0.18em] md:text-sm">
+            <span className="whitespace-nowrap">The 3rd QCFD</span>
+            <span className="mx-1.5 text-primary/60">·</span>
+            <span className="whitespace-nowrap">Quantum Computing</span>{' '}
+            <span className="whitespace-nowrap">for Fluid Dynamics</span>
+          </p>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
             {conference.tagline}
