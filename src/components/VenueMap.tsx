@@ -134,12 +134,15 @@ function tryOpenInApp(target: MapTarget): void {
 }
 
 export function VenueMap() {
-  // facade 模式：用户主动点击才加载真正的百度地图 iframe。
-  // 百度地图加载后会弹出人机验证 captcha 并自动 focus 其 input，
-  // 浏览器随即触发 scroll-into-view 把视口拉到 iframe 处，
-  // 把用户从其他位置吸过来——这是 iframe 内部行为，外部无法拦截。
-  // 改为点击激活即可根治。
-  const [mapActivated, setMapActivated] = useState(false)
+  // facade 模式（仅桌面端）：用户主动点击才加载真正的百度地图 iframe。
+  // 桌面端百度地图加载后会弹出人机验证 captcha 并自动 focus 其 input，
+  // 浏览器随即触发 scroll-into-view 把视口拉到 iframe 处，把用户从其
+  // 他位置吸过来——这是 iframe 内部行为，外部无法拦截。
+  // 移动端（百度地图移动版不弹这个验证）保持自动加载，体验更顺。
+  const [mapActivated, setMapActivated] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(max-width: 1023px)').matches
+  })
 
   return (
     <section id="venue" className="section-pad">
@@ -165,7 +168,7 @@ export function VenueMap() {
         </div>
 
         <div className="mt-10 grid gap-5 lg:grid-cols-[1.4fr_1fr] lg:gap-6">
-          {/* 左侧：百度地图（facade 模式，点击后才加载，避免 captcha 抢焦点） */}
+          {/* 左侧：百度地图（桌面端 facade 模式，点击后才加载；移动端自动加载） */}
           <div className="card-surface overflow-hidden">
             {mapActivated ? (
               <iframe
@@ -177,21 +180,16 @@ export function VenueMap() {
                 className="block aspect-[4/3] w-full border-0 sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]"
               />
             ) : (
-              <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-5 bg-gradient-to-br from-bg-alt/40 to-bg-alt/80 p-6 text-center sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]">
-                <div className="grid size-16 place-items-center rounded-2xl bg-white/70 ring-1 ring-black/5">
-                  <MapPin className="size-8 text-primary" strokeWidth={1.5} />
+              <button
+                type="button"
+                onClick={() => setMapActivated(true)}
+                className="group flex aspect-[4/3] w-full flex-col items-center justify-center gap-4 bg-gradient-to-br from-bg-alt/40 to-bg-alt/80 transition hover:from-bg-alt/60 hover:to-bg-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60 sm:aspect-[16/10] lg:aspect-auto lg:h-[520px]"
+              >
+                <div className="grid size-14 place-items-center rounded-2xl bg-white/80 ring-1 ring-black/5 transition group-hover:bg-white">
+                  <MapPin className="size-7 text-primary" strokeWidth={1.5} />
                 </div>
-                <div className="space-y-1.5">
-                  <p className="text-base font-semibold text-fg">百度地图</p>
-                  <p className="mx-auto max-w-sm text-xs leading-relaxed text-fg-muted">
-                    首次加载会弹出人机验证并自动聚焦，为避免打断浏览，请按需手动加载
-                  </p>
-                </div>
-                <Button type="button" size="default" onClick={() => setMapActivated(true)}>
-                  <MapPin className="size-4" />
-                  加载百度地图
-                </Button>
-              </div>
+                <span className="text-sm font-medium text-fg">点击加载百度地图</span>
+              </button>
             )}
           </div>
 
