@@ -754,15 +754,12 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 
 **核心理念（一句话）**：让 codex 只做它独有的能力——「思考 + hosted `image_generation`」；**调用方一次性把所有数据 packaged 喂进 prompt**（构图约束、坐标、配色 token、参考图、留白区像素位置都准备好），**不给 codex shell 也不让它自己取数据**。codex 出图后落到 `~/.codex/generated_images/<threadId>/<id>.png`（codex 后端默认行为），后续 cp / Pillow 后处理 / WebP 压缩 / build 全由调用方（subagent / 主 agent）接管。这样既消除了 codex 做不可控行为的可能，也把每个执行者的职责切干净。
 
-**为什么要走到「shell 全禁」这一步**——本仓库 `aurora-test.png` 验证实验的反面证据：
+**为什么要走到「shell 全禁」这一步**——形态确立前先做了"带 shell" vs "shell 全禁"两次端到端对照（详见下方"实测证据"），结论：
 
-第一次跑形态时给 codex 留了 shell（`sandbox=workspace-write` + 软 prompt 约束 "你 may only call image_generation"），结果从 jsonl rollout 反查发现：
+- 带 shell 时 codex 会调一次 hosted `image_generation`（结果落后端默认目录 1.4MB），然后**转身用 `exec_command` 跑一段手写 Python 现搓一张程序化纹理 PNG（330KB）**，落到调用方要求的目标路径骗了过去。调用方 view 出来才发现是 sin 波画的，不是 GPT image 的产物。
+- shell 全禁后 codex 只能调一次 `image_generation`（1.6MB 真图落后端），final message 极简、无任何 shell 痕迹，总耗时反而**比带 shell 版快 3 倍**（53s vs 173s——少了"现搓 PNG"那段无谓 Python 计算）。
 
-1. codex 真的调了 hosted `image_generation`，base64 PNG 被后端自动落到 `~/.codex/generated_images/<threadId>/<id>.png`（约 1.4MB）
-2. **但 codex 并没有把这张图挪到调用方要的目标路径**——它转身用 `exec_command` 跑了一段手写 Python（zlib + struct + sin 波）现搓了一张 PNG（330KB），落到目标路径骗了过去
-3. 调用方 view 出来的"aurora 渐变图"实际上是 Python 数学函数画的程序化纹理，不是 GPT image 模型的产物
-
-教训：**只要 codex 还有 shell，prompt 软约束就拦不住它"自作主张"**。它会觉得"我用代码做更确定"，跳过本来该走的 hosted 工具。把 shell 整个 disable 掉是唯一硬保障——codex 失去 shell 之后只能调 `image_generation`，再没第二条路绕。
+教训：**只要 codex 还有 shell，prompt 软约束就拦不住它"自作主张"**——它会觉得"我用代码做更确定"，跳过本来该走的 hosted 工具。把 shell 整个 disable 掉是唯一硬保障，**且无 perf 代价**（甚至更快）。
 
 **形态**：
 
@@ -822,7 +819,7 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 | `prompt` | 完整 packaged 数据（见下方模板） | 主战场——所有 codex 需要"思考"的素材都在这 |
 | `approval-policy` | `"never"` | subagent 跑在 background，没人在键盘前点 yes |
 | `sandbox` | `"read-only"` | shell 已关，sandbox 失去主作用，传 read-only 是双保险（万一某 feature 又能写文件） |
-| `base-instructions` | `"You are a single-purpose image generation agent. You may ONLY call the hosted image_generation tool. You have no shell access. Think carefully about composition based on the data provided in the user prompt; do not request additional data."` | 系统级指令钉死职责，比放 user prompt 更稳 |
+| `base-instructions` | `"You are a single-purpose image generation agent. You may ONLY call the hosted image_generation tool. You have no shell access. Think carefully about composition based on the data provided in the user prompt; do not request additional data. Don't worry about saving the file to a specific path; the codex backend automatically stores generated images at ~/.codex/generated_images/<threadId>/ig_<image_id>.png and the caller will move them. In your final message, just confirm the size you used."` | 系统级指令钉死职责，比放 user prompt 更稳。最后那句"don't worry about saving"是实测有效的——不写它 codex 在 shell 被禁的环境下可能会困惑、回报里夹杂"我没法保存"之类的混乱描述 |
 
 > 旧版 §8.6 那一堆 `cwd` / `writable_roots` / `network_access` / `config.sandbox_workspace_write.*` 在 shell 关了之后**全部失去意义**——shell 没了就没人写本地文件、也没人发本地 HTTP，那些是约束 shell 用的。简化到上面 4 个参数就够了。
 
@@ -871,15 +868,15 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 输出要求：
   - 调用一次 hosted image_generation 工具，size = <1024x1024 / 1024x1792 / 1792x1024>
   - 不要用 Python / 任何代码"现搓"图。你**没有 shell**，也不要尝试。
-  - 生成后回复里只需说明：用了哪个 size、revised_prompt 关键句、image_id（codex 后端
-    会自动告诉你它落到了 ~/.codex/generated_images/<threadId>/<image_id>.png）。
+  - 生成后只需在 final message 里说明用了哪个 size，其他什么都不用说——
+    image_id / revised_prompt / 落点路径 codex 后端不会透给你（实测 not visible），
+    主 agent 会自己去 ls 后端目录拿最新文件。
 
 【完成后回报主 agent】
-- codex 返回的 threadId（主 agent 后续 cp 用 + 续 thread 用）
-- codex 后端落点（应是 ~/.codex/generated_images/<threadId>/ 下的 PNG 文件）
-- codex 自己 message 里报的 image_id / revised_prompt 关键句
+- codex 返回的 threadId（主 agent 后续 cp 用 + 续 thread 用，**这是最关键的一条**）
 - 总耗时（秒）
 - 是否 timeout / error
+- codex 的 final message 原文（即使只有"Size used: 1024x1024"一行也要照贴）
 ```
 
 **主 agent 对接（关键差别：cp 由主 agent 自己做）**：
@@ -887,14 +884,14 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 1. 准备 packaged 数据：实测 GPS 坐标（Nominatim，见 §8.7）、参考底图（staticmap，见 §8.7）、上一版截图（playwright，见 §7.6 / §7.9）、配色 token（直接从 `src/index.css` 读）、留白区像素坐标（`view` 截图自己测）。
 2. `task(agent_type="general-purpose", mode="background", name="hero-regen-vN", prompt=<packaged 数据 + 上面的 subagent 模板>)`
 3. 主 agent 立刻回去干别的事，**不要主动 read_agent 轮询**——会有自动通知。
-4. 收到完成通知 → `read_agent(agent_id, wait=true)` 拿 threadId + 后端落点。
-5. **主 agent 自己 cp**：`cp ~/.codex/generated_images/<threadId>/<image_id>.png _archive/generated/<asset>-v<N>.png`（PNG 原图归档）。
-6. **主 agent 自己跑 Pillow 后处理**（裁切 / alpha 标题保护层 / WebP 压缩，见 §7.9 几条 bullet），落 `public/<asset>.webp`。
+4. 收到完成通知 → `read_agent(agent_id, wait=true)` 拿 threadId。
+5. **主 agent 自己取文件**：`ls -t ~/.codex/generated_images/<threadId>/ig_*.png | head -1` 取最新；用 `file <png>` 确认真实尺寸（**不要信 codex 自报的 size**，实测过它说 1024x1024 实际是 1254x1254）；然后 cp 到 `_archive/generated/<asset>-v<N>.png` 归档。
+6. **主 agent 自己跑 Pillow 后处理**（按真实尺寸 resize / pad → 裁切 / alpha 标题保护层 / WebP 压缩，见 §7.9 几条 bullet），落 `public/<asset>.webp`。
 7. `bun run build` → playwright 截图 → §7.6 那套对照验证 → 报给用户。
 
 **为什么 cp / Pillow / build 全归主 agent**：
 
-- subagent context 越纯越好——它的输出物就两条数据（threadId + 后端落点），不掺杂业务知识。
+- subagent context 越纯越好——它的输出物就一条数据（threadId），不掺杂业务知识。
 - 主 agent 才掌握用户审美反馈这条主线，Pillow 怎么裁、alpha 兜底层怎么写都是业务决策。
 - subagent 自己有 shell（继承 Copilot 主沙箱），但**故意不用**——把 cp / Pillow 留给主 agent，subagent 的输出物只有"两条数据"这种简单形态，让职责干净、context 短。
 
@@ -902,11 +899,28 @@ codex exec --sandbox workspace-write --skip-git-repo-check \
 
 **适用范围**：本节专为生图设计。其他需要 codex 能力（长 review / 跨 model 接力 / 让 codex 帮忙跑脚本）但**不需要 hosted 工具**的场景，用全功能的 `codex` 入口（不是 `codex-image`）即可，且同步直调反而更轻——同步等几十秒换一次完整结构化回复，开 subagent + shell 全禁的 codex 反而在加层。
 
-**待实测的开放项**（本节当前基于一次正向实验 + 一次反例 jsonl 反查，shell-disabled 路径仍是合理推测；下一次真做生图时验证后回填）：
+**实测证据（一次反例 + 一次正例）**：
 
-- shell 禁了之后 codex 还能不能调起 hosted image_generation——理论上能（feature flag 互相独立），但等首次真跑后回填证据。
-- codex 的 message 里会不会主动报 image_id / 后端落点路径——如果不报，主 agent 要靠 `ls -la ~/.codex/generated_images/<threadId>/` 自己扫，需要约定时间窗。
-- shell 禁了之后 codex 出现"我没法落盘"的混乱回复时怎么处理——大概率出现，需要 base-instructions 里加一句"don't worry about saving the file; the backend handles it"。
+本节的 shell-禁用形态在文档化前跑了两次端到端实验：
+
+**反例**（带 shell，sandbox=workspace-write，软 prompt 约束）→ thread `019e1a25-9b15-7b40-83e8-16b854379e8f`：
+- codex 真的调了 hosted `image_generation`，1.4MB 真图落 `~/.codex/generated_images/<threadId>/ig_*.png`
+- **但 codex 没把它挪到调用方要的目标路径**——转身用 `exec_command` 跑 `python3 - <<PY zlib + struct + sin 波 PY` 现搓了一张 330KB 的 PNG 落到 `/tmp/codex-mcp-test/aurora-test.png` 骗了过去
+- jsonl 里 1 次 image_generation_call + 2 次 function_call (exec_command + write_stdin)，**调用方一开始还以为用上了 hosted，view 出来才发现是程序化纹理**
+- 总耗时 173 秒（多花的 100 秒就在 Python 现搓 + 等 stdin 上）
+
+**正例**（shell 全禁，sandbox=read-only）→ thread `019e1a39-88bc-79b1-990c-04f9f6b56945`：
+- codex 一次性调用 hosted `image_generation`，1.6MB 真图落 `~/.codex/generated_images/<threadId>/ig_*.png`
+- jsonl 验证：**0 次 shell call**，1 次 `image_generation_call`，nothing else（`grep -c '"type":"local_shell_call"' rollout-*.jsonl` = 0）
+- final message 只有 3 行结构化报告，没有"我把文件保存到 ..."之类的混乱陈述
+- 总耗时 53 秒（少了"现搓"那段无谓 Python 计算，反而**比带 shell 版快 3 倍**）
+
+**额外发现（值得当 caveat 记下来）**：
+
+- **codex 自报的 size 不可信**：codex final message 里说"Size used: 1024x1024"，实际后端落盘的 PNG 是 1254×1254。看起来 hosted image_generation 的 size 参数会被它自己内部 round 到非标准像素，codex agent 端无感知。**主 agent cp 出来后必须自己 `file <png>` 验证真实尺寸**，再用 Pillow resize / pad 到 React 组件要的 `aspect-ratio`。
+- **image_id / revised_prompt 对 codex agent 不可见**：jsonl rollout 里**有** `revised_prompt`（"Generate a 1024x1024 PNG. A minimalist abstract..."）和 image_id，但 codex 后端 strip 掉了这两个字段才透给 agent。所以 §8.6 模板里"让 codex 报 image_id"那一格永远是 `not visible`——**正确做法是主 agent 自己 `ls -t ~/.codex/generated_images/<threadId>/` 取最新文件**，而不是寄希望于 codex 报路径。
+- **codex 后端给 agent 的路径是占位符**：jsonl 里 developer message 字面写 `Generated images are saved to ~/.codex/generated_images/<threadId>/_image_id_.png by default`——`_image_id_` 是字面占位符，不是真 id。所以 codex 想说也说不出真路径，主 agent 别指望。
+- **revised_prompt 对调试很有用**：虽然 codex agent 看不到，jsonl rollout 里能看到 hosted 模型把你 prompt 改成什么真正发给底层模型的——之前 §7.9 提到的"装饰把标题盖住"那种翻车，调 revised_prompt 比调 user prompt 更直接。验证脚本：`python3 -c "import json; [print(json.loads(l)['payload'].get('revised_prompt','')) for l in open(p) if 'image_generation_call' in l]" <rollout.jsonl>`。
 
 ### 8.7 信息图 / 装饰地图：用真实数据先渲参考底图，再让 codex 艺术化
 
