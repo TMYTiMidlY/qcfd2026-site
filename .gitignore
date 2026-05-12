@@ -15,6 +15,13 @@ dist/
 # Playwright MCP scratch (screenshots / console logs)
 .playwright-mcp/
 
+# Top-level debug screenshots (Playwright MCP sometimes saves to repo root)
+# Real assets live in public/ or archive/; root-level *.png is always scratch.
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+
 # Local-only — do NOT commit (token / hooks symlink to parent project)
 .mcp.json
 .github/hooks/
