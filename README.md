@@ -265,12 +265,33 @@ unit 文件已 commit 在 `systemd/qcfd2026-site.service`，仅 7 行 ExecStart�
 
 `bun run build` 输出 `dist/`，是**纯静态资源**（HTML + 哈希化的 JS/CSS + 图片字体），任何静态托管都能跑。
 
+### 维护者约定：用 env vars 表达「当前部署方案」
+
+不同会议复用本仓库时部署目标会变；用三个 env vars 解释清楚比每次 ad-hoc 沟通靠谱：
+
+| env var | 取值 | 说明 |
+|---|---|---|
+| `DEPLOY_METHOD` | `cloudflare-pages` / `github-pages` / `nginx` / `caddy` / `ssh-tunnel` | 决定走下面哪个方案小节 |
+| `DEPLOY_HOST` | ssh 别名 / `user@host` | nginx / caddy / ssh-tunnel 才需要；前两种平台部署不需要 |
+| `DEPLOY_DOMAIN` | 例如 `example.com` | nginx / caddy 才需要；用于 `<domain>` 占位符替换 |
+
+把这三个 export 写进仓库根的 `.envrc`（已 `.gitignore`，不进库；direnv 用户 `cd` 进目录自动加载），后面任何方案小节里出现的 `<host>` / `<domain>` 占位符直接换成对应变量即可，**不需要每次问部署目标**。
+
+> 当前会议（QCFD 2026）固定走 **方案 B / nginx**；其它取值是给将来复用的备忘。
+
+---
+
 ### 方案 A：Cloudflare Pages / Vercel / Netlify（推荐）
+
+`DEPLOY_METHOD=cloudflare-pages`（或 `vercel` / `netlify`，本质相同）。
 
 - 推 GitHub → 连接平台 → 构建命令 `bun install && bun run build`，输出目录 `dist`
 - 自动 HTTPS、全球 CDN、PR Preview、自定义域名
+- 不需要 `DEPLOY_HOST` / `DEPLOY_DOMAIN`：域名在平台控制台绑定，本地不持有部署密钥
 
 ### 方案 B：自有 nginx 服务器
+
+`DEPLOY_METHOD=nginx`，需要 `DEPLOY_HOST` + `DEPLOY_DOMAIN`。
 
 ```bash
 pixi run bun run build
@@ -321,6 +342,8 @@ server {
 
 ### 方案 C：Caddy（自动 HTTPS）
 
+`DEPLOY_METHOD=caddy`，需要 `DEPLOY_HOST` + `DEPLOY_DOMAIN`。本地 build + rsync 与方案 B 完全一样（同一份 `dist/`、同一种 sudo / 免密策略），区别只在远端 web server 配置：把上面 nginx 那段换成：
+
 ```caddy
 <domain> {
     root * /var/www/<domain>/html
@@ -332,11 +355,17 @@ server {
 }
 ```
 
+Caddy 自带 ACME，不需要 certbot；改完 `caddy reload` 即可。
+
 ### 方案 D：GitHub Pages
+
+`DEPLOY_METHOD=github-pages`，不需要 `DEPLOY_HOST`，`DEPLOY_DOMAIN` 仅在用自定义域名时用到（写进 `public/CNAME`）。
 
 仓库 Settings → Pages → Source 选 GitHub Actions；workflow 装 bun → `bun install && bun run build` → 把 `dist` 推 `gh-pages` 分支。
 
 ### 方案 E：临时通过 SSH 反向隧道暴露
+
+`DEPLOY_METHOD=ssh-tunnel`，需要 `DEPLOY_HOST`（跳板机），`DEPLOY_DOMAIN` 可选（仅作为跳板机 nginx/Caddy 的对外域名）。
 
 适合 demo / 临时分享：本机起 `vite preview`，再用 `ssh -R` 把本机端口反向映射到一台有公网 IP 的跳板机上。
 
