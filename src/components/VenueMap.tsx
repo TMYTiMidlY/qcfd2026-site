@@ -2,37 +2,48 @@ import { useState } from 'react'
 import { MapPin, Navigation, Building, ExternalLink } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
+import {
+  detectPlatform,
+  tryOpenInApp,
+  type DeepLinkTarget,
+} from '@/lib/mapDeeplink'
 
 const VENUE_NAME = '合肥翡翠湖迎宾馆'
 const REGION = '合肥'
+// 通用 src（高德要求"appname"形式；腾讯 referer 兼容字符串）
 const SRC = 'qcfd2026'
+// 百度官方文档要求 src 格式：iOS = ios.<company>.<app>，Android = andr.<company>.<app>
+// https://lbsyun.baidu.com/faq/api?title=webapi/uri/ios -> 通用参数 src
+const BAIDU_SRC_IOS = 'ios.qcfd2026.web'
+const BAIDU_SRC_ANDR = 'andr.qcfd2026.web'
 
 const venue = encodeURIComponent(VENUE_NAME)
 const region = encodeURIComponent(REGION)
 
 const baiduEmbedUrl = `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D${venue}`
 
-type MapTarget = {
+type MapTarget = DeepLinkTarget & {
   key: string
   label: string
-  webUrl: string
-  iosScheme: string
-  androidIntent: string
   primary?: boolean
 }
 
-// Web URL 用法：移动端 deeplink 失败时 fallback；桌面端直接用。
-// scheme/intent 用法：移动端尝试唤起原生 App（详见各家官方 LBS URI 文档）
-//   - 高德    https://lbs.amap.com/api/uri-api/guide/mobile-web/poi
-//   - 百度    https://lbsyun.baidu.com/index.php?title=uri/api/web
-//   - 腾讯    https://lbs.qq.com/webApi/uriV1/uriGuide/uriWebSearch
+// 各家官方 LBS URI 文档（已核对参数名，2024-08 / 2023-10 版本）：
+//   高德 iOS    https://lbs.amap.com/api/amap-mobile/guide/ios/search       —— iosamap://poi?...&name=POI名&dev=0   (必填: name)
+//   高德 Android https://lbs.amap.com/api/amap-mobile/guide/android/search  —— androidamap://poi?...&keywords=...&dev=0
+//   高德 Web URI https://lbs.amap.com/api/uri-api/guide/mobile-web/poi      —— uri.amap.com/marker 或 search?keyword=
+//   百度 iOS    https://lbsyun.baidu.com/faq/api?title=webapi/uri/ios      —— baidumap://map/place/search?query=...&region=...&src=ios.<co>.<app>
+//   百度 Android https://lbsyun.baidu.com/faq/api?title=webapi/uri/andriod —— baidumap://map/place/search?query=...&src=andr.<co>.<app>
+//   腾讯       https://lbs.qq.com/webApi/uriV1/uriGuide/uriMobileMarker    —— qqmap://map/marker 标记单点；search 路径属社区惯用法（referer 任意字符串实测可用）
+//   腾讯 Web URI https://apis.map.qq.com/uri/v1/search?keyword=...&referer=...
 const mapTargets: MapTarget[] = [
   {
     key: 'amap',
     label: '高德地图',
     primary: true,
     webUrl: `https://uri.amap.com/search?keyword=${venue}&src=${SRC}&callnative=1`,
-    iosScheme: `iosamap://poi?sourceApplication=${SRC}&keywords=${venue}&dev=0`,
+    // iOS 文档要求 name（不是 keywords！keywords 是 Android 端字段，iOS 端会被忽略 → App 落到首页）
+    iosScheme: `iosamap://poi?sourceApplication=${SRC}&name=${venue}&dev=0`,
     androidIntent:
       `intent://poi?sourceApplication=${SRC}&keywords=${venue}&dev=0` +
       `#Intent;scheme=androidamap;package=com.autonavi.minimap;` +
@@ -44,9 +55,9 @@ const mapTargets: MapTarget[] = [
     key: 'baidu',
     label: '百度地图',
     webUrl: `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D${venue}`,
-    iosScheme: `baidumap://map/place/search?query=${venue}&region=${region}&src=${SRC}`,
+    iosScheme: `baidumap://map/place/search?query=${venue}&region=${region}&src=${BAIDU_SRC_IOS}`,
     androidIntent:
-      `intent://map/place/search?query=${venue}&region=${region}&src=${SRC}` +
+      `intent://map/place/search?query=${venue}&region=${region}&src=${BAIDU_SRC_ANDR}` +
       `#Intent;scheme=baidumap;package=com.baidu.BaiduMap;` +
       `S.browser_fallback_url=${encodeURIComponent(
         `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D${venue}`,
@@ -55,83 +66,17 @@ const mapTargets: MapTarget[] = [
   {
     key: 'tencent',
     label: '腾讯地图',
-    webUrl: `https://map.qq.com/?ref=${SRC}&what=${venue}`,
+    // Web 用官方 URI API（apis.map.qq.com/uri/v1/search），map.qq.com 首页非官方接口
+    webUrl: `https://apis.map.qq.com/uri/v1/search?keyword=${venue}&referer=${SRC}`,
     iosScheme: `qqmap://map/search?keyword=${venue}&referer=${SRC}`,
     androidIntent:
       `intent://map/search?keyword=${venue}&referer=${SRC}` +
       `#Intent;scheme=qqmap;package=com.tencent.map;` +
       `S.browser_fallback_url=${encodeURIComponent(
-        `https://map.qq.com/?ref=${SRC}&what=${venue}`,
+        `https://apis.map.qq.com/uri/v1/search?keyword=${venue}&referer=${SRC}`,
       )};end`,
   },
 ]
-
-type Platform = 'ios' | 'android' | 'wechat' | 'desktop'
-
-function detectPlatform(): Platform {
-  if (typeof navigator === 'undefined') return 'desktop'
-  const ua = navigator.userAgent
-  // WeChat 内置浏览器对 custom scheme 处理不可靠，直接走 web
-  if (/MicroMessenger|WeChat/i.test(ua)) return 'wechat'
-  if (/iPad|iPhone|iPod/i.test(ua)) return 'ios'
-  if (/Android/i.test(ua)) return 'android'
-  return 'desktop'
-}
-
-// 三层 fallback：①App 没装 → 1.5s 后跳 web；②JS 异常 → catch 后 window.open web；
-// ③JS 完全没跑 → <a href={webUrl}> 自带兜底
-function tryOpenInApp(target: MapTarget): void {
-  let platform: Platform = 'desktop'
-  try {
-    platform = detectPlatform()
-  } catch {
-    /* ignore */
-  }
-
-  // Android：intent:// URL 自带 S.browser_fallback_url，Chrome 原生处理 fallback
-  if (platform === 'android') {
-    try {
-      window.location.href = target.androidIntent
-      return
-    } catch {
-      /* fall through */
-    }
-  }
-
-  // iOS：iframe 触发 scheme，setTimeout 后若页面仍可见则 App 未装，跳 web
-  if (platform === 'ios') {
-    try {
-      const iframe = document.createElement('iframe')
-      iframe.style.cssText =
-        'position:absolute;width:0;height:0;border:0;visibility:hidden;'
-      iframe.src = target.iosScheme
-      document.body.appendChild(iframe)
-
-      const start = Date.now()
-      window.setTimeout(() => {
-        try {
-          iframe.parentNode?.removeChild(iframe)
-        } catch {
-          /* ignore */
-        }
-        // 如果页面仍可见且时间没过太久，说明 App 没拦截 → 打开 web
-        if (Date.now() - start < 2500 && !document.hidden) {
-          window.open(target.webUrl, '_blank', 'noopener,noreferrer')
-        }
-      }, 1500)
-      return
-    } catch {
-      /* fall through */
-    }
-  }
-
-  // 桌面 / 微信 / 任何异常路径：直接 web
-  try {
-    window.open(target.webUrl, '_blank', 'noopener,noreferrer')
-  } catch {
-    window.location.href = target.webUrl
-  }
-}
 
 export function VenueMap() {
   // facade 模式（仅桌面端）：用户主动点击才加载真正的百度地图 iframe。

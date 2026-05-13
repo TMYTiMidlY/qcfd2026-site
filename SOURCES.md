@@ -360,18 +360,33 @@
 | 高德 / 百度 / 腾讯地图按钮 URL | 🟠 走「关键字搜索」型 URL（让地图 App 自己定位）；不再硬编码经纬度。本版按钮区改为横排（`flex flex-wrap`），按钮宽度按内容自适应 |
 | 嵌入百度地图 iframe | 🟠 URL 模板 `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D{关键词}`，无需 API Key、无需登录（首次会显示人机验证滑块）。参考 [CCF QCDAC 站](http://111.229.138.69/) 即用此方案 |
 
-**地图按钮三家 URL 形式（2026-05-11 23:11 已修正百度 / 腾讯）**：
+**地图按钮 URL 形式（Web + 移动端 App 唤起）**：
 
-| 平台 | 当前 URL 模板 | 验证情况 |
-|---|---|---|
-| 高德 | `https://uri.amap.com/search?keyword=<KW>&src=qcfd2026&callnative=1` | 🟢 高德官方 URI API（[`lbs.amap.com/api/uri-api`](https://lbs.amap.com/api/uri-api/guide/mobile-web/poi)），重定向到 `ditu.amap.com/search?...` 渲染搜索结果。无变动 |
-| 百度 | `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D<KW>` | 🟢 与本页 iframe 嵌入同形式，已验证可用。**2026-05-11 23:11 修正**：原版用 `https://map.baidu.com/search/<KW>`（path 形式），不在百度官方 URI 文档里，新版 SPA 路由不消费 path，关键词丢失。换为现在的 `?newmap=1&s=s%26wd%3D<KW>` 形式（百度官方 URI API `api.map.baidu.com/place/search` 的实际重定向目标，长期可用） |
-| 腾讯 | `https://map.qq.com/?ref=qcfd2026&what=<KW>` | 🟢 腾讯官方 URI API（[`lbs.qq.com/webApi/uriV1/uriGuide/uriWebSearch`](https://lbs.qq.com/webApi/uriV1/uriGuide/uriWebSearch)）`apis.map.qq.com/uri/v1/search?keyword=…&referer=…` 浏览器请求时的实际重定向目标（即 SPA 实际消费的入参形式）。**2026-05-11 23:11 修正**：原版用 `https://map.qq.com/#search?keyword=<KW>`（hash fragment 形式），腾讯地图新版 SPA 路由不再消费 `#` 后的参数，关键词丢失，地图打开后停在腾讯总部默认视图 |
+按钮点击行为：桌面 / 微信 内置浏览器 → 直接打开 Web URL；iOS / Android → 先尝试唤起对应 App，失败 1.5 s 后回退到 Web URL。三类 URL 全部对照各家官方 LBS URI 文档逐项核验。
+
+| 平台 | 端 | URL 模板 | 文档 / 验证 |
+|---|---|---|---|
+| 高德 | Web | `https://uri.amap.com/search?keyword=<KW>&src=qcfd2026&callnative=1` | 🟢 高德 URI API ([`lbs.amap.com/api/uri-api/guide/mobile-web/poi`](https://lbs.amap.com/api/uri-api/guide/mobile-web/poi))；`callnative=1` 在移动 web 上自动尝试唤起 App |
+| 高德 | iOS scheme | `iosamap://poi?sourceApplication=qcfd2026&name=<KW>&dev=0` | 🟢 高德 iOS 端「搜索地点」 ([`lbs.amap.com/api/amap-mobile/guide/ios/search`](https://lbs.amap.com/api/amap-mobile/guide/ios/search))。**必填字段是 `name`，不是 `keywords`** |
+| 高德 | Android intent | `androidamap://poi?sourceApplication=qcfd2026&keywords=<KW>&dev=0` | 🟢 高德 Android 端「搜索地点」 ([`lbs.amap.com/api/amap-mobile/guide/android/search`](https://lbs.amap.com/api/amap-mobile/guide/android/search))。Android 端用 `keywords`（与 iOS 不同！） |
+| 百度 | Web | `https://map.baidu.com/?newmap=1&ie=utf-8&s=s%26wd%3D<KW>` | 🟢 与本页 iframe 嵌入同形式（百度 URI API `api.map.baidu.com/place/search` 的实际重定向目标） |
+| 百度 | iOS scheme | `baidumap://map/place/search?query=<KW>&region=合肥&src=ios.qcfd2026.web` | 🟢 百度 iOS URI API · 2.2.1 POI 检索 ([`lbsyun.baidu.com/faq/api?title=webapi/uri/ios`](https://lbsyun.baidu.com/faq/api?title=webapi/uri/ios))。`src` 格式**必须**为 `ios.<company>.<app>`，「不传此参数，不保证服务」 |
+| 百度 | Android intent | `baidumap://map/place/search?query=<KW>&region=合肥&src=andr.qcfd2026.web` | 🟢 百度 Android URI API · 2.3 POI 检索 ([`lbsyun.baidu.com/faq/api?title=webapi/uri/andriod`](https://lbsyun.baidu.com/faq/api?title=webapi/uri/andriod))。`src` 格式必须为 `andr.<company>.<app>` |
+| 腾讯 | Web | `https://apis.map.qq.com/uri/v1/search?keyword=<KW>&referer=qcfd2026` | 🟢 腾讯地图官方 URI API（`apis.map.qq.com/uri/v1/search`，浏览器实际请求形式） |
+| 腾讯 | iOS scheme | `qqmap://map/search?keyword=<KW>&referer=qcfd2026` | 🟡 marker 路径文档：[`lbs.qq.com/webApi/uriV1/uriGuide/uriMobileMarker`](https://lbs.qq.com/webApi/uriV1/uriGuide/uriMobileMarker)（`qqmap://map/...` 协议 + `referer` 字段约定）。search 子路径在 marker 文档外，属社区惯用法；marker 文档要求 `referer` 为开发者 key，search 路径实测接受任意字符串 |
+| 腾讯 | Android intent | `qqmap://map/search?keyword=<KW>&referer=qcfd2026` | 🟡 同上，Android 通过 `intent://...#Intent;scheme=qqmap;package=com.tencent.map;...;end` 包装 |
+
+> Android intent 统一形式：`intent://<path>?<params>#Intent;scheme=<app-scheme>;package=<app-package>;S.browser_fallback_url=<encoded-web-url>;end`，App 未装时 Chrome / WebView 自动跳 fallback URL。Chrome 官方说明：[developer.chrome.com/docs/multidevice/android/intents](https://developer.chrome.com/docs/multidevice/android/intents/)。
 
 > 已修正：
 > - 上一版（commit `ab811bb`）一度结论「三大地图均不支持无 API Key iframe，只能跳转」，并在线上 UI 写了相应免责文字——结论与免责均**已撤回**：百度地图的 web 搜索 URL 直接 iframe 嵌入即可工作；线上不应出现内部权衡说明。
 > - 上一版（commit `e51bc91`）一度新增「苹果地图」按钮（`https://maps.apple.com/?q=...`）——**已撤回**：Apple Maps web 在中国大陆地区不开放，桌面浏览器点击会被默认地图 handler 劫持到高德等服务，体验割裂。会议主要面向中国大陆用户，仅保留高德 / 百度 / 腾讯三家。
-> - **2026-05-11 23:11 修正百度 / 腾讯按钮 URL**（详见上表），用户反馈两条按钮在浏览器实测点开后无搜索结果。已分别用 Playwright 验证新 URL 在 headless Chrome 中能正确定位到翡翠湖区域（百度的「人机验证」弹窗仅对自动化流量出现，正常用户浏览不触发）。
+> - **2026-05-11 23:11 修正百度 / 腾讯 Web URL**，用户反馈两条按钮在浏览器实测点开后无搜索结果。已分别用 Playwright 验证新 URL 在 headless Chrome 中能正确定位到翡翠湖区域（百度的「人机验证」弹窗仅对自动化流量出现，正常用户浏览不触发）。
+> - **2026-05-12 22:18 修正三家移动端 App 唤起 URL**（用户在 iPhone 实测高德按钮唤起 App 后只到首页、未关联目的地，触发本次审查）：
+>   - **高德 iOS scheme**：`iosamap://poi?...&keywords=...&dev=0` → `iosamap://poi?...&name=...&dev=0`。误用 Android 端字段名 `keywords`，iOS App 解析不到 POI 名 → 落到首页（用户实测复现）。依据：高德 iOS 官方文档 `lbs.amap.com/api/amap-mobile/guide/ios/search` 明示「`name` POI 名称 — 是否必填：是」。
+>   - **百度 iOS / Android scheme `src`**：`src=qcfd2026` → `src=ios.qcfd2026.web` / `src=andr.qcfd2026.web`。原版不符合官方文档 `ios.<company>.<app>` / `andr.<company>.<app>` 格式要求（百度 URI 通用参数说明：「不传此参数，不保证服务」）。
+>   - **腾讯 Web URL**：`https://map.qq.com/?ref=...&what=...` → `https://apis.map.qq.com/uri/v1/search?keyword=...&referer=...`。原版 `map.qq.com/?ref=...&what=...` 是非官方接口（Web URI 文档实际指向 `apis.map.qq.com/uri/v1/search`，前者为腾讯地图主站首页 + 不消费的 query 参数）。Android intent `S.browser_fallback_url` 同步切到此官方 URL。
+>   - 高德 Android intent / 百度 scheme 路径 / 腾讯 mobile scheme：参数核验后无需修改，仅补注释说明文档来源。
 
 ---
 
@@ -383,7 +398,27 @@
 |---|---|
 | 3 个出发点（合肥南站 / 合肥站 / 合肥新桥国际机场）及其地铁路线、打车里程 / 时长 / 费用、温馨提示 | 🟢 会务组提供的官方《合肥翡翠湖迎宾馆会议交通指南》（2026-05-11） |
 | 酒店地址「合肥市经济技术开发区容成路 1 号 · 翡翠湖迎宾馆」 | 🟢 同上（与 docx 第一节「会议地点」一致，正式门牌号） |
-| 「打开高德查询路线」按钮 | 🟠 让地图 App 算实时路况 |
+| 「打开高德查询路线」按钮 | 🟢 高德官方路径规划接口（详见下方 URL 方案表）。让地图 App 算实时路况 |
+| 三大枢纽 + 翡翠湖迎宾馆 GCJ-02 经纬度（用于高德 deeplink 的 slat/slon/dlat/dlon） | 🟡 OSM Nominatim WGS84 ([nominatim.openstreetmap.org/search](https://nominatim.openstreetmap.org/search?q=%E5%90%88%E8%82%A5%E7%BF%A1%E7%BF%A0%E6%B9%96%E8%BF%8E%E5%AE%BE%E9%A6%86&format=json)) → GCJ-02 标准偏移公式转换（2026-05-12）。原始查询结果：翡翠湖迎宾馆 (117.184346, 31.774548)、合肥南站 (117.284601, 31.802233)、合肥站 (117.309802, 31.885316)、合肥新桥国际机场 (116.967842, 31.988328) |
+
+**「打开高德查询路线」按钮 URL 方案（2026-05-12 22:30 修复）**：
+
+旧方案 `https://uri.amap.com/search?keyword=合肥南站到合肥翡翠湖迎宾馆`：高德主站浏览器端能识别"A 到 B"自然语言并跳路线规划页，**网页端正常**；但 callnative 唤起 App 后，amap App 走的是 POI 搜索接口、不识别这种自然语言 → 用户在 iPhone 上点击后落在"无搜索结果"页面（用户实测复现）。改用高德官方"路径规划"三件套：
+
+| 端 | URL 模板 | 文档 / 字段说明 |
+|---|---|---|
+| Web | `https://uri.amap.com/navigation?from=<slon>,<slat>,<sname>&to=<dlon>,<dlat>,<dname>&mode=car&policy=0&coordinate=gaode&src=qcfd2026&callnative=1` | 🟢 高德 URI API · 路径规划 ([`lbs.amap.com/api/uri-api/guide/travel/route`](https://lbs.amap.com/api/uri-api/guide/travel/route))。`from` / `to` 必填经纬度 + 可选 name；`mode=car` 驾车（也支持 bus/walk/ride）；`callnative=1` 在移动 web 上自动尝试唤起 App |
+| iOS scheme | `iosamap://path?sourceApplication=qcfd2026&slat=<slat>&slon=<slon>&sname=<sname>&dlat=<dlat>&dlon=<dlon>&dname=<dname>&dev=0&t=0` | 🟢 高德 iOS · 路线规划 ([`lbs.amap.com/api/amap-mobile/guide/ios/route`](https://lbs.amap.com/api/amap-mobile/guide/ios/route))。文档明示「起点经纬度参数为空且起点名称不为空 → 以名称发起路线规划」，因此即使 sname 为名称也能 work；本项目同时传经纬度 + 名称兜两头。`t=0` 驾车，`dev=0`（GCJ-02 不再二次国测加密） |
+| Android intent | `intent://route/plan/?sourceApplication=qcfd2026&slat=<slat>&slon=<slon>&sname=<sname>&dlat=<dlat>&dlon=<dlon>&dname=<dname>&dev=0&t=0#Intent;scheme=amapuri;package=com.autonavi.minimap;S.browser_fallback_url=<encoded webUrl>;end` | 🟢 高德 Android · 路径规划 ([`lbs.amap.com/api/amap-mobile/guide/android/route`](https://lbs.amap.com/api/amap-mobile/guide/android/route))。**注意 Android scheme 是 `amapuri://route/plan/`**（与 iOS 的 `iosamap://path` 路径不同），且 `dlat` / `dlon` / `dev` / `t` 文档列为必填 |
+
+> 跨平台 deeplink 触发逻辑抽到 `src/lib/mapDeeplink.ts`（同时供 `VenueMap.tsx` 与 `Traffic.tsx` 复用）：
+> - 桌面 / 微信内置浏览器 → `<a href={webUrl} target="_blank">` 直接打开 web
+> - iOS Safari / Chrome → 隐藏 iframe 触发 `iosamap://path`，1.5 s 后若页面仍可见则视为 App 未装，`window.open` 跳 web
+> - Android Chrome / WebView → `window.location.href = intent://...`，App 未装时 Chrome 原生消费 `S.browser_fallback_url` 跳 web
+
+> 已修正：
+> - **2026-05-12 22:30 修正三个「打开高德查询路线」按钮**（用户在 iPhone 实测「网页端正常但手机端唤起 App 后只到搜索页、不识别"A 到 B"自然语言」）：废弃 `uri.amap.com/search?keyword=A 到 B` 写法，改用高德官方路径规划接口的 Web URI + iOS path scheme + Android route intent 三件套；并在 `traffic.ts` 中给每个 origin 与翡翠湖迎宾馆补上 GCJ-02 经纬度（OSM Nominatim WGS84 → GCJ-02 偏移公式转换）。
+
 
 **weather 卡（沿用）**：
 | 字段 | 出处 |

@@ -22,16 +22,31 @@ export type TrafficInfo = {
   origin: string
   shortName?: string
   icon: 'plane' | 'train-front' | 'train'
-  amapKeyword: string
+  /**
+   * 起点 GCJ-02 经纬度（高德 / 腾讯地图坐标系），格式 `lon,lat`。
+   * 用于高德路径规划 `iosamap://path` / `amapuri://route/plan/` deeplink 中
+   * 的 slat / slon 字段；web fallback `https://uri.amap.com/navigation`
+   * 也以此填入 from。
+   *
+   * 数据来源：OSM Nominatim WGS84 → 通过 GCJ-02 标准偏移公式转换（2026-05-12）。
+   */
+  lonlat: string
   subModes: TrafficSubMode[]
 }
+
+/**
+ * 终点：合肥翡翠湖迎宾馆 GCJ-02 经纬度（lon,lat）。
+ * OSM Nominatim 查询「合肥翡翠湖迎宾馆」 WGS84 (117.184346, 31.774548) → GCJ-02 转换。
+ */
+export const VENUE_LONLAT_GCJ02 = '117.189875,31.772617'
+export const VENUE_NAME = '合肥翡翠湖迎宾馆'
 
 export const traffic: TrafficInfo[] = [
   {
     origin: '合肥南站',
     shortName: '高铁主站',
     icon: 'train-front',
-    amapKeyword: '合肥南站到合肥翡翠湖迎宾馆',
+    lonlat: '117.290119,31.800250',
     subModes: [
       {
         type: 'metro',
@@ -56,7 +71,7 @@ export const traffic: TrafficInfo[] = [
     origin: '合肥站',
     shortName: '合肥老火车站',
     icon: 'train',
-    amapKeyword: '合肥站到合肥翡翠湖迎宾馆',
+    lonlat: '117.315382,31.883356',
     subModes: [
       {
         type: 'metro',
@@ -82,7 +97,7 @@ export const traffic: TrafficInfo[] = [
     origin: '合肥新桥国际机场',
     shortName: 'HFE',
     icon: 'plane',
-    amapKeyword: '合肥新桥国际机场到合肥翡翠湖迎宾馆',
+    lonlat: '116.973083,31.986186',
     subModes: [
       {
         type: 'mixed',

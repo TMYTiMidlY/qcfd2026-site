@@ -14,9 +14,18 @@ import {
   trafficNotes,
   venueAddress,
   weather,
+  VENUE_LONLAT_GCJ02,
+  VENUE_NAME,
   type TrafficInfo,
   type TrafficSubMode,
 } from '@/data/traffic'
+import {
+  detectPlatform,
+  tryOpenInApp,
+  type DeepLinkTarget,
+} from '@/lib/mapDeeplink'
+
+const SRC = 'qcfd2026'
 
 const iconMap: Record<TrafficInfo['icon'], typeof Plane> = {
   plane: Plane,
@@ -42,8 +51,46 @@ const subModeMeta: Record<
   },
 }
 
-function amapUrl(keyword: string) {
-  return `https://uri.amap.com/search?keyword=${encodeURIComponent(keyword)}`
+/**
+ * 高德路径规划深链（origin → 翡翠湖迎宾馆，t=0 驾车）。
+ *
+ * 文档对照：
+ *   Web URI  https://lbs.amap.com/api/uri-api/guide/travel/route
+ *            —— uri.amap.com/navigation?from=lon,lat,name&to=lon,lat,name&mode=car
+ *   iOS      https://lbs.amap.com/api/amap-mobile/guide/ios/route
+ *            —— iosamap://path?slat=&slon=&sname=&dlat=&dlon=&dname=&t=0&dev=0
+ *   Android  https://lbs.amap.com/api/amap-mobile/guide/android/route
+ *            —— amapuri://route/plan/?slat=&slon=&sname=&dlat=&dlon=&dname=&t=0&dev=0
+ *
+ * 旧版用 `https://uri.amap.com/search?keyword=合肥南站到合肥翡翠湖迎宾馆`：
+ * web 端高德主站能识别"A 到 B"自然语言并跳路线规划，但 callnative 唤起 App 后，
+ * App 走的是 POI 搜索接口，不识别这种自然语言 → 用户在 iPhone 上点击后
+ * 落在"无搜索结果"页面。改用官方路径规划接口（Web URI + iOS path + Android route）。
+ */
+function routeTarget(t: TrafficInfo): DeepLinkTarget {
+  const [slon, slat] = t.lonlat.split(',')
+  const [dlon, dlat] = VENUE_LONLAT_GCJ02.split(',')
+  const sname = encodeURIComponent(t.origin)
+  const dname = encodeURIComponent(VENUE_NAME)
+  const webUrl =
+    `https://uri.amap.com/navigation?from=${slon},${slat},${sname}` +
+    `&to=${dlon},${dlat},${dname}` +
+    `&mode=car&policy=0&coordinate=gaode&src=${SRC}&callnative=1`
+  return {
+    webUrl,
+    iosScheme:
+      `iosamap://path?sourceApplication=${SRC}` +
+      `&slat=${slat}&slon=${slon}&sname=${sname}` +
+      `&dlat=${dlat}&dlon=${dlon}&dname=${dname}` +
+      `&dev=0&t=0`,
+    androidIntent:
+      `intent://route/plan/?sourceApplication=${SRC}` +
+      `&slat=${slat}&slon=${slon}&sname=${sname}` +
+      `&dlat=${dlat}&dlon=${dlon}&dname=${dname}` +
+      `&dev=0&t=0` +
+      `#Intent;scheme=amapuri;package=com.autonavi.minimap;` +
+      `S.browser_fallback_url=${encodeURIComponent(webUrl)};end`,
+  }
 }
 
 function SubModeBlock({ m }: { m: TrafficSubMode }) {
@@ -144,15 +191,29 @@ export function Traffic() {
                   ))}
                 </div>
 
-                <a
-                  href={amapUrl(t.amapKeyword)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-auto inline-flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
-                >
-                  <Navigation className="size-4" />
-                  打开高德查询路线
-                </a>
+                {(() => {
+                  const target = routeTarget(t)
+                  return (
+                    <a
+                      href={target.webUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => {
+                        const p = detectPlatform()
+                        // 桌面 / 微信：保持默认（target=_blank 打开 web）
+                        // 移动端：拦截 + 走 iosamap://path / amapuri://route/plan/，失败再 fallback
+                        if (p === 'ios' || p === 'android') {
+                          e.preventDefault()
+                          tryOpenInApp(target)
+                        }
+                      }}
+                      className="mt-auto inline-flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary hover:text-white"
+                    >
+                      <Navigation className="size-4" />
+                      打开高德查询路线
+                    </a>
+                  )
+                })()}
               </div>
             )
           })}
