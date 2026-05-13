@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Atom,
   Brain,
@@ -99,8 +99,36 @@ export function TopicGrid() {
   // 共享状态：桌面端永远是数字；移动端可为 null（全部折叠）
   const [selected, setSelected] = useState(0)
   const [openMobile, setOpenMobile] = useState<number | null>(null)
+  const navItemRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const SelectedIcon = iconMap[topics[selected].icon]
+
+  // 桌面端方向键 / Home / End 切换 selected（roving tabindex 模式）
+  function handleNavKeyDown(e: React.KeyboardEvent<HTMLUListElement>) {
+    const max = topics.length - 1
+    let next: number | null = null
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        next = selected === max ? 0 : selected + 1
+        break
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        next = selected === 0 ? max : selected - 1
+        break
+      case 'Home':
+        next = 0
+        break
+      case 'End':
+        next = max
+        break
+    }
+    if (next !== null) {
+      e.preventDefault()
+      setSelected(next)
+      navItemRefs.current[next]?.focus()
+    }
+  }
 
   return (
     <section id="topics" className="section-pad">
@@ -139,18 +167,25 @@ export function TopicGrid() {
             className="self-start lg:sticky lg:top-20"
             aria-label="议题方向导航"
           >
-            <ul className="space-y-1.5">
+            <ul className="space-y-1.5" onKeyDown={handleNavKeyDown}>
               {topics.map((t, idx) => {
                 const Icon = iconMap[t.icon]
                 const isActive = selected === idx
                 return (
                   <li key={t.title}>
                     <button
+                      ref={(el) => {
+                        navItemRefs.current[idx] = el
+                      }}
                       type="button"
+                      id={`topic-nav-${idx}`}
                       onClick={() => setSelected(idx)}
                       aria-current={isActive ? 'true' : undefined}
+                      aria-controls="topic-detail"
+                      data-state={isActive ? 'active' : 'inactive'}
+                      tabIndex={isActive ? 0 : -1}
                       className={cn(
-                        'group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition',
+                        'group flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
                         isActive
                           ? 'border-primary/40 bg-primary/[0.07] shadow-sm'
                           : 'border-transparent hover:border-black/5 hover:bg-bg-alt/60',
@@ -187,8 +222,10 @@ export function TopicGrid() {
           </nav>
 
           <div
-            key={selected}
-            className="card-surface animate-in fade-in p-6 duration-200 lg:p-7"
+            id="topic-detail"
+            role="region"
+            aria-labelledby={`topic-nav-${selected}`}
+            className="card-surface p-6 lg:p-7"
           >
             <div className="mb-4 flex items-center gap-3 border-b border-black/5 pb-4">
               <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary text-white">
@@ -222,9 +259,11 @@ export function TopicGrid() {
               >
                 <button
                   type="button"
+                  id={`topic-mobile-trigger-${idx}`}
+                  aria-controls={`topic-mobile-panel-${idx}`}
+                  aria-expanded={isOpen}
                   onClick={() => setOpenMobile(isOpen ? null : idx)}
                   className="flex w-full items-center gap-4 px-5 py-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/60 sm:px-6 sm:py-5"
-                  aria-expanded={isOpen}
                 >
                   <div
                     className={cn(
@@ -254,6 +293,9 @@ export function TopicGrid() {
                   />
                 </button>
                 <div
+                  id={`topic-mobile-panel-${idx}`}
+                  role="region"
+                  aria-labelledby={`topic-mobile-trigger-${idx}`}
                   className={cn(
                     'grid transition-[grid-template-rows] duration-300',
                     isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
