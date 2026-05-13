@@ -57,7 +57,7 @@ export const traffic: TrafficInfo[] = [
       {
         type: 'taxi',
         label: '打车出行',
-        route: '直接导航搜索"合肥翡翠湖迎宾馆"，途经龙川路、容成路，路线顺畅。',
+        route: '直接导航搜索“合肥翡翠湖迎宾馆”，途经龙川路、容成路，路线顺畅。',
         metrics: [
           { label: '里程', value: '约 11.9 km' },
           { label: '时长', value: '平峰 25-30 min · 高峰 35-40 min' },

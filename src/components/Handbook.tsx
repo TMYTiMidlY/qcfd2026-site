@@ -22,8 +22,8 @@ const items: {
     kind: 'pdf',
   },
   {
-    title: '第二轮通知',
-    desc: '会议组织机构、特邀嘉宾、报告专家（持续更新中）、注册细则与联系方式（由组委会通过微信公众号文章发布）',
+    title: '力学学会公众号最新通知',
+    desc: '由中国力学学会通过微信公众号发布的本届会议通知，点击前往公众号查阅',
     available: true,
     kind: 'wechat',
     url: 'https://mp.weixin.qq.com/s/8Tnf3EMgEu-ugjtzciO9Ow',

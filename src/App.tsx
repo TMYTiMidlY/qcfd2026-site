@@ -10,11 +10,13 @@ import { VenueMap } from '@/components/VenueMap'
 import { Traffic } from '@/components/Traffic'
 import { NewsList } from '@/components/NewsList'
 import { Footer } from '@/components/Footer'
+import { Notifications } from '@/components/Notifications'
 
 export default function App() {
   return (
     <div className="min-h-screen">
       <Header />
+      <Notifications />
       <main>
         <Hero />
         <ChairIntro />
