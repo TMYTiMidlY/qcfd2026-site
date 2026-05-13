@@ -11,30 +11,81 @@
  *   无独立公众号链接 → body 提供完整正文，NewsList 用 Dialog 展开（与 SpeakerCard 同模式），
  *   并通过 pinned: true 让 <Notifications /> 在页面右上角自动浮出（可关闭，dismiss 状态持久化到 localStorage）
  */
+/**
+ * Dialog 弹窗内的正文段落：
+ *   - string：渲染为普通段落（首段会被 NewsDetailDialog 自动加上"intro 高亮框"样式）
+ *   - 对象：渲染为带图标徽标 + 标题 + 正文的 Callout 卡片，用于强调结构化要点
+ *     （如「关于住宿与协议价」「5/24 上午参观巢湖明月」之类的子小节）
+ */
+export type NewsBodyBlock =
+  | string
+  | {
+      kind: 'callout'
+      /** lucide 图标名（在 NewsDetailDialog 的 ICONS 映射里挑） */
+      icon?: 'hotel' | 'sparkles' | 'info' | 'check' | 'message-square'
+      title?: string
+      text: string
+      /** 视觉色调：primary（默认蓝调） / accent（更跳的强调色） */
+      tone?: 'primary' | 'accent'
+    }
+
 export type NewsItem = {
   id: string
   date: string
   title: string
   excerpt: string
-  /** 外链 URL（公众号文章等）；与 body 二选一 */
+  /** 外链 URL（公众号文章等）；与 body 二选一。卡片整体跳转用 */
   url?: string
   /** 没有外链时使用的完整正文（可含多段），渲染为 Dialog 弹窗 */
-  body?: string[]
+  body?: NewsBodyBlock[]
   tag?: string
   thumbnail?: string
+  /** Dialog 内主行动按钮的链接（如问卷直达）。与卡片级 url 不同：actionUrl 仅在弹窗内出现 */
+  actionUrl?: string
+  /** Dialog 内主行动按钮的文案，配合 actionUrl 使用 */
+  actionLabel?: string
   /** 是否在页面右上角浮出 toast 通知（仅适用于带 body 的近期重要通告） */
   pinned?: boolean
 }
 
 export const news: NewsItem[] = [
   {
+    id: 'registration-survey-2026',
+    date: '2026-05-13',
+    title: '请所有参会者填写《参会人员信息登记》问卷',
+    excerpt:
+      '为方便会务组统筹安排住宿、制作参会证、准备会议材料，请所有参会老师（包括已完成注册）填写《参会人员信息登记》问卷；会议酒店翡翠湖迎宾馆有协议价（350 / 460 元/晚），每位登记的参会老师都会预留房间；如对 5/24 上午参观巢湖明月有兴趣，可在备注栏注明。',
+    body: [
+      '为方便会务组统筹安排住宿、制作参会证并准备会议相关材料，请所有参会老师（包括已完成注册的老师）填写《第三届流体力学量子计算前沿研讨会 · 参会人员信息登记》问卷。',
+      {
+        kind: 'callout',
+        icon: 'hotel',
+        tone: 'accent',
+        title: '关于住宿与协议价',
+        text: '会议方与会议酒店——合肥翡翠湖迎宾馆——有协议价合作，目前两档为 350 元 / 晚 与 460 元 / 晚。每位通过本问卷完成登记的参会老师，会议方都会按登记信息在翡翠湖迎宾馆为您预留房间，享受协议价。',
+      },
+      {
+        kind: 'callout',
+        icon: 'sparkles',
+        tone: 'primary',
+        title: '5/24 上午参观巢湖明月',
+        text: '本届会议在 5 月 24 日上午安排了参观巢湖明月（合肥先进计算中心，可现场近距离参观量子计算机）。如果您有兴趣参加，可以在问卷的备注栏注明「参观巢湖明月」，方便会议方了解大家的意愿（仅作意愿调研，并非强制填写）。',
+      },
+      '如果您已经在会议群内通过同一份问卷二维码完成填写，则无需重复提交。',
+      '感谢各位老师的支持与配合！',
+    ],
+    actionUrl: 'https://v.wjx.cn/vm/tcQi05x.aspx',
+    actionLabel: '前往填写问卷',
+    tag: '参会登记',
+    pinned: true,
+  },
+  {
     id: 'member-verify-id-tip-2026',
-    date: '2026-05',
+    date: '2026-05-12',
     title: '注册答疑：力学学会“会员验证号”在哪里查？',
     excerpt:
       '已使用中国力学学会学术会议平台管理系统的老师，如在注册过程中需要填写“会员验证号”，请按以下方式查阅。',
     body: [
-      '【注册答疑 · 中国力学学会会员验证号】',
       '已使用中国力学学会学术会议平台管理系统的老师，如在注册过程中需要填写“会员验证号”，请按以下方式查阅：',
       '登录中国力学学会会员系统，在个人中心下载电子会员证书，证书上印有一串会员编号，即为注册系统所需的“会员验证号”。',
       '如有其它注册问题，可联系页脚的会议联系人。',
@@ -44,12 +95,11 @@ export const news: NewsItem[] = [
   },
   {
     id: 'wukong180-quota-2026',
-    date: '2026-05',
+    date: '2026-05-12',
     title: '参会福利：本源悟空-180 量子计算机 30 分钟机时',
     excerpt:
       '每位注册参会者可获得“本源悟空-180”超导量子计算机 30 分钟实机机时，由协办单位本源量子提供，用于会后试跑量子算法、复现报告中提及的 QCFD 工作。',
     body: [
-      '【流体力学量子计算 2026 · 最新参会福利】',
       '每位注册参会者可获得“本源悟空-180 量子计算机” 30 分钟机时。',
       '“本源悟空-180” 是本届协办单位本源量子（合肥）股份有限公司研制的新一代超导量子计算机，可用于会后试跑各报告中提及的 QCFD 算法、复现实验或开展自有研究。',
       '具体机时领取与使用流程后续再行通知，敬请关注。',

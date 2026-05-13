@@ -1,5 +1,15 @@
-import { Newspaper, Sparkles, X } from 'lucide-react'
-import type { NewsItem } from '@/data/news'
+import {
+  ArrowUpRight,
+  CheckCircle2,
+  Hotel,
+  Info,
+  MessageSquare,
+  Newspaper,
+  Sparkles,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
+import type { NewsItem, NewsBodyBlock } from '@/data/news'
 import {
   Dialog,
   DialogClose,
@@ -12,6 +22,52 @@ import {
 type Props = {
   item: NewsItem | null
   onOpenChange: (open: boolean) => void
+}
+
+const CALLOUT_ICONS: Record<NonNullable<Extract<NewsBodyBlock, { kind: 'callout' }>['icon']>, LucideIcon> = {
+  hotel: Hotel,
+  sparkles: Sparkles,
+  info: Info,
+  check: CheckCircle2,
+  'message-square': MessageSquare,
+}
+
+type CalloutTone = NonNullable<Extract<NewsBodyBlock, { kind: 'callout' }>['tone']>
+
+const CALLOUT_TONE: Record<CalloutTone, { card: string; iconWrap: string; title: string }> = {
+  primary: {
+    card: 'border-primary/20 bg-gradient-to-br from-primary/[0.06] via-white to-primary/[0.03] shadow-sm shadow-primary/5',
+    iconWrap: 'bg-primary/12 text-primary ring-1 ring-primary/15',
+    title: 'text-fg',
+  },
+  accent: {
+    card: 'border-amber-300/40 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 shadow-sm shadow-amber-300/10',
+    iconWrap: 'bg-amber-500/12 text-amber-700 ring-1 ring-amber-500/20',
+    title: 'text-fg',
+  },
+}
+
+function CalloutCard({ block }: { block: Extract<NewsBodyBlock, { kind: 'callout' }> }) {
+  const Icon = CALLOUT_ICONS[block.icon ?? 'info'] ?? Info
+  const tone = CALLOUT_TONE[block.tone ?? 'primary']
+  return (
+    <div className={`flex gap-3.5 rounded-2xl border p-4 sm:gap-4 sm:p-5 ${tone.card}`}>
+      <span
+        className={`grid size-10 shrink-0 place-items-center rounded-xl ${tone.iconWrap}`}
+        aria-hidden
+      >
+        <Icon className="size-5" />
+      </span>
+      <div className="min-w-0 flex-1 space-y-1.5">
+        {block.title ? (
+          <h4 className={`text-sm font-semibold leading-snug sm:text-[0.95rem] ${tone.title}`}>
+            {block.title}
+          </h4>
+        ) : null}
+        <p className="text-sm leading-relaxed text-fg-soft">{block.text}</p>
+      </div>
+    </div>
+  )
 }
 
 export function NewsDetailDialog({ item, onOpenChange }: Props) {
@@ -52,18 +108,36 @@ export function NewsDetailDialog({ item, onOpenChange }: Props) {
             </DialogHeader>
 
             <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-5 text-sm leading-relaxed text-fg-soft sm:px-6 sm:pb-6">
-              {(item.body ?? [item.excerpt]).map((para, i) => (
-                <p
-                  key={i}
-                  className={
-                    i === 0
-                      ? 'rounded-xl border border-primary/15 bg-primary/[0.05] p-4 text-fg'
-                      : ''
-                  }
-                >
-                  {para}
-                </p>
-              ))}
+              {(item.body ?? [item.excerpt]).map((block, i) => {
+                if (typeof block === 'string') {
+                  return (
+                    <p
+                      key={i}
+                      className={
+                        i === 0
+                          ? 'rounded-xl border border-primary/15 bg-primary/[0.05] p-4 text-fg'
+                          : ''
+                      }
+                    >
+                      {block}
+                    </p>
+                  )
+                }
+                return <CalloutCard key={i} block={block} />
+              })}
+              {item.actionUrl ? (
+                <div className="pt-1">
+                  <a
+                    href={item.actionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                  >
+                    {item.actionLabel ?? '前往'}
+                    <ArrowUpRight className="size-4" />
+                  </a>
+                </div>
+              ) : null}
             </div>
           </>
         ) : null}

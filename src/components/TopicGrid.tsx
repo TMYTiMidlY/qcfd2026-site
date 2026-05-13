@@ -155,8 +155,7 @@ export function TopicGrid() {
               </a>
             </h2>
             <p className="hidden max-w-xl text-sm leading-relaxed text-white/80 md:mt-3 md:block">
-              围绕量子算法、量子-经典混合方法、硬件实现与智能赋能等方向，汇聚本届
-              14 位报告人的交叉研究成果
+              围绕量子算法、量子-经典混合方法、硬件实现与智能赋能等方向，汇聚本届报告人的交叉研究成果
             </p>
           </figcaption>
         </figure>

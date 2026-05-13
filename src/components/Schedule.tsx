@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, Clock, Mic, Coffee } from 'lucide-react'
+import { Calendar, Clock, Mic, Coffee, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { schedule, type ScheduleItem } from '@/data/schedule'
 
@@ -153,6 +153,14 @@ export function Schedule() {
                 </div>
               ),
             )}
+            {day.description ? (
+              <div className="flex items-start gap-3 bg-primary/[0.04] px-5 py-4 sm:px-7">
+                <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+                <p className="text-xs leading-relaxed text-fg-soft">
+                  {day.description}
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

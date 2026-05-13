@@ -116,7 +116,7 @@ export const traffic: TrafficInfo[] = [
         metrics: [
           { label: '里程', value: '约 38 km' },
           { label: '时长', value: '平峰 35-40 min · 高峰 45-50 min' },
-          { label: '费用', value: '¥60-70（含机场高速通行费 ¥10）' },
+          { label: '费用', value: '¥60-70' },
         ],
       },
     ],
