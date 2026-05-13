@@ -12,7 +12,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { topics, type Topic } from '@/data/topics'
-import { speakers } from '@/data/speakers'
 
 const iconMap: Record<Topic['icon'], typeof Atom> = {
   atom: Atom,
@@ -24,11 +23,7 @@ const iconMap: Record<Topic['icon'], typeof Atom> = {
   boxes: Boxes,
 }
 
-function getSpeaker(id: string) {
-  return speakers.find((s) => s.id === id)
-}
-
-/** 议题详情：description + 讲者列表 + 关键技术词；桌面与移动端共用渲染。 */
+/** 议题详情：description + 关键技术词；桌面与移动端共用渲染。 */
 function TopicDetail({ topic }: { topic: Topic }) {
   return (
     <>
@@ -36,46 +31,8 @@ function TopicDetail({ topic }: { topic: Topic }) {
         {topic.description}
       </p>
 
-      <div className="mt-5 sm:mt-6">
-        <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-primary">
-          本届相关报告
-        </p>
-        <ul className="grid gap-2.5 lg:grid-cols-2 lg:gap-3">
-          {topic.speakers.map((sp) => {
-            const speaker = getSpeaker(sp.id)
-            if (!speaker) return null
-            return (
-              <li
-                key={sp.id}
-                className="rounded-xl border border-black/5 bg-bg-alt/40 p-3 sm:p-3.5"
-              >
-                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                  <a
-                    href="#speakers"
-                    className="text-sm font-semibold text-fg transition hover:text-primary"
-                  >
-                    {speaker.name}
-                  </a>
-                  <span className="text-[11px] text-fg-muted">
-                    {speaker.affiliation}
-                  </span>
-                </div>
-                {speaker.topic && (
-                  <p className="mt-1 text-xs italic text-fg-muted">
-                    《{speaker.topic}》
-                  </p>
-                )}
-                <p className="mt-1.5 text-xs leading-relaxed text-fg-soft">
-                  {sp.note}
-                </p>
-              </li>
-            )
-          })}
-        </ul>
-      </div>
-
       {topic.keywords.length > 0 && (
-        <div className="mt-5">
+        <div className="mt-5 sm:mt-6">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
             关键技术词
           </p>
@@ -209,9 +166,6 @@ export function TopicGrid() {
                         >
                           {t.title}
                         </p>
-                        <p className="mt-0.5 text-[11px] text-fg-muted">
-                          {t.speakers.length} 位相关报告人
-                        </p>
                       </div>
                     </button>
                   </li>
@@ -280,7 +234,7 @@ export function TopicGrid() {
                     </h3>
                     {!isOpen && (
                       <p className="mt-1 text-[11px] text-fg-muted">
-                        {t.speakers.length} 位相关报告人 · 点击展开详情
+                        点击展开方向说明与关键技术词
                       </p>
                     )}
                   </div>
@@ -315,17 +269,11 @@ export function TopicGrid() {
         <div className="mt-6 flex items-start gap-3 rounded-2xl info-tint p-4">
           <Layers className="mt-0.5 size-4 shrink-0 text-primary" />
           <p className="text-sm text-fg-soft">
-            以上为本届会议的主要研讨方向，各方向之间互有交叉，分类仅供参考。<a
-              href="#speakers"
-              className="font-medium text-primary hover:underline"
-            >
-              张镭
-            </a>
-            （UnitaryLab 量子科学计算平台）覆盖 PDE/ODE、数值线性代数、ML、优化全链路，作为基础设施横跨多方向。完整报告列表详见
+            以上方向划分与关键技术词由人工智能大模型基于本届报告摘要归纳整理，仅供参考，不代表会议方官方分类。完整报告人名单详见
             <a href="#speakers" className="ml-0.5 font-medium text-primary hover:underline">
               特邀报告讲者
             </a>
-            与
+            ，各报告题目与场次安排详见
             <a href="#schedule" className="ml-0.5 font-medium text-primary hover:underline">
               会议日程
             </a>

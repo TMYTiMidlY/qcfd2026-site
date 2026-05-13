@@ -70,7 +70,7 @@ export function Schedule() {
             <a href="#schedule" className="hover:text-primary/80 transition">三天日程总览</a>
           </h2>
           <p className="mt-3 text-fg-soft">
-            5 月 22 日报到，23 日全天学术会议（14 个邀请报告，按下方时段进行），
+            5 月 22 日报到，23 日全天学术会议，
             24 日参观与离会。
           </p>
         </div>
