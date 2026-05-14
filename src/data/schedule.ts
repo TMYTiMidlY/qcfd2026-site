@@ -36,6 +36,8 @@ export type ScheduleItem = {
   speaker?: string
   /** 标记本条开始一个新的主持时段，chair 为该时段主持人姓名 */
   chair?: string
+  /** 条目类别：'visit' 参观活动，独立于茶歇/报告的视觉样式 */
+  kind?: 'visit'
 }
 
 export type ScheduleDay = {
@@ -163,16 +165,18 @@ export const schedule: ScheduleDay[] = [
     shortWeekday: '周日',
     label: '参观与离会',
     items: [
-      { time: '09:30–10:00', title: '乘车前往巢湖明月', note: '合肥先进计算中心' },
+      { time: '09:30–10:00', title: '乘车前往巢湖明月', note: '合肥先进计算中心', kind: 'visit' },
       {
         time: '10:00–10:30',
         title: '合肥先进计算中心展厅参观',
         note: '了解巢湖明月与量子计算建设背景',
+        kind: 'visit',
       },
       {
         time: '10:30–10:40',
         title: '巢湖明月主机参观',
         note: '近距离感受浸没式液冷',
+        kind: 'visit',
       },
     ],
     description:

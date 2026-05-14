@@ -1,31 +1,35 @@
 import { useState } from 'react'
-import { Calendar, Clock, Mic, Coffee, Info } from 'lucide-react'
+import { Calendar, Clock, Mic, Coffee, Info, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { schedule, type ScheduleItem } from '@/data/schedule'
 
 type Block =
   | { kind: 'session'; chair: string; items: ScheduleItem[] }
   | { kind: 'break'; item: ScheduleItem }
+  | { kind: 'visit'; items: ScheduleItem[] }
 
-/** 将 flat items 拆成 session block 和独立 break */
+/** 将 flat items 拆成 session block、独立 break 和参观 block */
 function groupItems(items: ScheduleItem[]): Block[] {
   const blocks: Block[] = []
   let current: Block | null = null
 
   for (const item of items) {
-    if (item.chair) {
-      // 新 session 开始
+    if (item.kind === 'visit') {
+      if (current?.kind === 'visit') {
+        current.items.push(item)
+      } else {
+        current = { kind: 'visit', items: [item] }
+        blocks.push(current)
+      }
+    } else if (item.chair) {
       current = { kind: 'session', chair: item.chair, items: [item] }
       blocks.push(current)
     } else if (!item.speaker) {
-      // 无 speaker 且无 chair → 茶歇/午餐/晚餐等独立条目
       current = null
       blocks.push({ kind: 'break', item })
     } else if (current?.kind === 'session') {
-      // 归入当前 session
       current.items.push(item)
     } else {
-      // 无归属的报告条目（兜底），独立展示
       blocks.push({ kind: 'break', item })
     }
   }
@@ -100,61 +104,45 @@ export function Schedule() {
           ))}
         </div>
 
-        <div className="mt-6 card-surface overflow-hidden">
-          <div className="flex flex-col gap-1 border-b border-black/5 px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
-            <div>
-              <h3 className="text-2xl font-semibold text-fg">{day.label}</h3>
-              <p className="mt-1 text-sm text-fg-muted">
-                {day.date} · {day.weekday}
-              </p>
+        {day.items.every((i) => i.kind === 'visit') ? (
+          /* 参观日：同样的 tab 白色卡片容器 + 竖直时间线内容 */
+          <div className="mt-6 card-surface overflow-hidden">
+            <div className="flex flex-col gap-1 border-b border-black/5 px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
+              <div>
+                <h3 className="text-2xl font-semibold text-fg">{day.label}</h3>
+                <p className="mt-1 text-sm text-fg-muted">
+                  {day.date} · {day.weekday}
+                </p>
+              </div>
             </div>
-            <span className="text-xs text-fg-muted">
-              共 {day.items.length} 项安排
-            </span>
-          </div>
 
-          <div className="divide-y divide-black/5">
-            {blocks.map((block, bIdx) =>
-              block.kind === 'break' ? (
-                <div
-                  key={bIdx}
-                  className="flex items-center gap-3 bg-bg-alt/50 px-5 py-4 sm:px-7"
-                >
-                  <Coffee className="size-4 text-fg-muted" />
-                  <span className="inline-flex w-32 shrink-0 items-center gap-2 text-sm font-medium text-fg-muted">
-                    <Clock className="size-3.5" />
-                    {block.item.time ?? '—'}
-                  </span>
-                  <span className="text-sm text-fg-soft">
-                    {block.item.title}
-                    {block.item.note ? (
-                      <span className="ml-2 text-xs text-fg-muted">
-                        · {block.item.note}
+            <div className="px-5 py-6 sm:px-7">
+              <div className="relative pl-8 sm:pl-10">
+                {/* 时间轴线 */}
+                <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-accent via-primary to-primary/20 sm:left-[15px]" aria-hidden />
+
+                {day.items.map((item, i) => (
+                  <div key={i} className="relative pb-8 last:pb-0">
+                    <div className="absolute -left-8 top-1 grid size-6 place-items-center rounded-full bg-accent/15 ring-2 ring-accent/30 sm:-left-10 sm:size-8">
+                      <MapPin className="size-3 text-accent sm:size-3.5" />
+                    </div>
+                    <div>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent">
+                        <Clock className="size-3" />
+                        {item.time}
                       </span>
-                    ) : null}
-                  </span>
-                </div>
-              ) : (
-                <div key={bIdx} className="px-5 py-5 sm:px-7">
-                  {/* Session header */}
-                  <div className="mb-3 flex items-center gap-2">
-                    <Mic className="size-3.5 text-primary" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-primary">
-                      主持：{block.chair}
-                    </span>
-                    <span className="h-px flex-1 bg-primary/15" aria-hidden />
+                      <h4 className="mt-1.5 text-base font-semibold text-fg">{item.title}</h4>
+                      {item.note ? (
+                        <p className="mt-1 text-sm text-fg-soft">{item.note}</p>
+                      ) : null}
+                    </div>
                   </div>
-                  {/* Items with left accent border */}
-                  <div className="divide-y divide-black/5 border-l-2 border-primary/25 pl-4 sm:pl-5">
-                    {block.items.map((item, iIdx) => (
-                      <ItemRow key={iIdx} item={item} />
-                    ))}
-                  </div>
-                </div>
-              ),
-            )}
+                ))}
+              </div>
+            </div>
+
             {day.description ? (
-              <div className="flex items-start gap-3 bg-primary/[0.04] px-5 py-4 sm:px-7">
+              <div className="flex items-start gap-3 border-t border-black/5 bg-primary/[0.04] px-5 py-4 sm:px-7">
                 <Info className="mt-0.5 size-4 shrink-0 text-primary" />
                 <p className="text-xs leading-relaxed text-fg-soft">
                   {day.description}
@@ -162,7 +150,70 @@ export function Schedule() {
               </div>
             ) : null}
           </div>
-        </div>
+        ) : (
+          /* 会议日：session / break 列表 */
+          <div className="mt-6 card-surface overflow-hidden">
+            <div className="flex flex-col gap-1 border-b border-black/5 px-5 py-5 sm:flex-row sm:items-end sm:justify-between sm:px-7">
+              <div>
+                <h3 className="text-2xl font-semibold text-fg">{day.label}</h3>
+                <p className="mt-1 text-sm text-fg-muted">
+                  {day.date} · {day.weekday}
+                </p>
+              </div>
+              <span className="text-xs text-fg-muted">
+                共 {day.items.length} 项安排
+              </span>
+            </div>
+
+            <div className="divide-y divide-black/5">
+              {blocks.map((block, bIdx) =>
+                block.kind === 'break' ? (
+                  <div
+                    key={bIdx}
+                    className="flex items-center gap-3 bg-bg-alt/50 px-5 py-4 sm:px-7"
+                  >
+                    <Coffee className="size-4 text-fg-muted" />
+                    <span className="inline-flex w-32 shrink-0 items-center gap-2 text-sm font-medium text-fg-muted">
+                      <Clock className="size-3.5" />
+                      {block.item.time ?? '—'}
+                    </span>
+                    <span className="text-sm text-fg-soft">
+                      {block.item.title}
+                      {block.item.note ? (
+                        <span className="ml-2 text-xs text-fg-muted">
+                          · {block.item.note}
+                        </span>
+                      ) : null}
+                    </span>
+                  </div>
+                ) : block.kind === 'session' ? (
+                  <div key={bIdx} className="px-5 py-5 sm:px-7">
+                    <div className="mb-3 flex items-center gap-2">
+                      <Mic className="size-3.5 text-primary" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-primary">
+                        主持：{block.chair}
+                      </span>
+                      <span className="h-px flex-1 bg-primary/15" aria-hidden />
+                    </div>
+                    <div className="divide-y divide-black/5 border-l-2 border-primary/25 pl-4 sm:pl-5">
+                      {block.items.map((item, iIdx) => (
+                        <ItemRow key={iIdx} item={item} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null,
+              )}
+              {day.description ? (
+                <div className="flex items-start gap-3 bg-primary/[0.04] px-5 py-4 sm:px-7">
+                  <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <p className="text-xs leading-relaxed text-fg-soft">
+                    {day.description}
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

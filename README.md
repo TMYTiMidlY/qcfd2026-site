@@ -408,35 +408,59 @@ ssh -N -R 8000:127.0.0.1:4173 <user>@<jumphost>
 
 ## 七、Playwright 截图自检（MCP / 无 sudo 环境）
 
-仓库已经把 Playwright 浏览器跑通需要的 13 个 Linux 系统库（`gtk3 / nspr / nss / libcups / libgbm / libdrm / libxcomposite / libxdamage / libxrandr / at-spi2-core / alsa-lib / pulseaudio-client / dbus`）放进了 `pixi.toml`，并提供 `scripts/chromium-wrapper.sh` 让 Playwright 自带的 Chromium 二进制 **加载 pixi 环境里的 .so 而不是系统 `/usr/lib`**。这样在没有 root 权限的机器上，Copilot 也能调用 Playwright MCP 给本地站截图。
+仓库已经把 Playwright 浏览器跑通需要的 13 个 Linux 系统库（`gtk3 / nspr / nss / libcups / libgbm / libdrm / libxcomposite / libxdamage / libxrandr / at-spi2-core / alsa-lib / pulseaudio-client / dbus`）放进了 `pixi.toml`，并通过 pixi 自带的 `[activation.env]` 把 `.pixi/envs/default/lib` 注入到 `LD_LIBRARY_PATH`，让 Playwright 自带的 Chromium 加载 pixi 环境里的 `.so` 而不是系统 `/usr/lib`：
+
+```toml
+# pixi.toml
+[activation.env]
+LD_LIBRARY_PATH = "$PIXI_PROJECT_ROOT/.pixi/envs/default/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+```
+
+只要进程是从 `pixi run` 或 `pixi shell` 起的，子进程（包括 chromium）都会继承这个变量。
+
+- **交互式 shell**：`.envrc` 激活了 pixi env，终端里直接跑 `npx playwright` 或 `chrome --version` 都能找到库。
+- **MCP / 非 direnv 环境**：`.mcp.json` 把 `command` 设为 `pixi run --manifest-path …`，再喂给 `npx -y @playwright/mcp@latest`。MCP server、playwright 进程、chromium 子进程全部继承 `LD_LIBRARY_PATH`，不再需要 wrapper 脚本。
+
+> **原理**：Playwright 自带的 Chromium 是动态链接的，需要 `libnspr4.so` / `libnss3.so` 等十几个系统库。pixi 装到 `.pixi/envs/default/lib/`，只要 chromium 启动时 `LD_LIBRARY_PATH` 包含该路径就能找到。
 
 ### 7.1 一次性准备（克隆仓库后做一次）
 
 ```bash
 cd qcfd2026-site
 pixi install                       # 拉所有 .so 到 .pixi/envs/default/lib/
+direnv allow .envrc                # 激活 pixi env（交互式 shell 用）
 npx playwright install chromium    # 下 ~/.cache/ms-playwright/chromium-*/
-chmod +x scripts/chromium-wrapper.sh
-scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Testing …”
 ```
 
-### 7.2 MCP 配置（位于 `TiMidlY-projects/.mcp.json`）
+验证：
+
+```bash
+# 方式 1：direnv 生效的 shell 里直接跑
+~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome --version
+
+# 方式 2：通过 pixi run（不依赖 direnv，等同 MCP 启动路径）
+pixi run ~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome --version
+
+# 两者都应输出 "Google Chrome for Testing …"
+```
+
+### 7.2 MCP 配置（位于 `.mcp.json`）
 
 ```jsonc
 "playwright": {
-  "command": "npx",
+  "command": "pixi",
   "args": [
-    "-y", "@playwright/mcp@latest",
+    "run", "--manifest-path", "/absolute/path/to/qcfd2026-site/pixi.toml",
+    "npx", "-y", "@playwright/mcp@latest",
     "--browser", "chromium",
     "--executable-path",
-    "<YOUR_REPO_PATH>/scripts/chromium-wrapper.sh",
+    "/home/<user>/.cache/ms-playwright/chromium-<NNNN>/chrome-linux64/chrome",
     "--headless"
   ]
 }
 ```
 
-> wrapper 是一个 7 行 shell 脚本：注入 `LD_LIBRARY_PATH=$PROJECT/.pixi/envs/default/lib`，然后 `exec` Playwright 自带的 `chrome`。Playwright/MCP 完全无感知。把路径换成你本机 clone 的绝对路径即可。
-
+> MCP server 由 Copilot CLI 直接 fork，不经过 direnv，所以用 `pixi run` 启动以触发 `[activation.env]`，把 `LD_LIBRARY_PATH` 注入给整条进程链。`--manifest-path` 与 `--executable-path` 都换成本机绝对路径；后者具体的 `chromium-NNNN` 版本号取决于上一步 `npx playwright install` 拉到的版本。
 ### 7.3 在新 Copilot 会话里端到端验证
 
 把下面这段贴给新会话，让它跑一遍，能看到截图就说明通路 OK：
@@ -459,16 +483,15 @@ scripts/chromium-wrapper.sh --version   # 期望输出 “Google Chrome for Test
 
 | 现象 | 原因 / 处理 |
 |---|---|
-| `chromium-wrapper.sh: pixi env not found` | 没跑 `pixi install` |
-| `chromium-wrapper.sh: no Playwright Chromium found` | 没跑 `npx playwright install chromium`，或者想用别的浏览器版本 → 设 `PLAYWRIGHT_CHROMIUM_BIN=/abs/path/to/chrome` 覆盖 |
-| `error while loading shared libraries: libXXX.so` | 该 lib 没在 pixi env 里。先 `pixi search 'libXXX*'` 找包名，再 `pixi add <pkg>`，最后 `scripts/chromium-wrapper.sh --version` 验证 |
-| MCP 报 `Missing system dependencies` 但 `--version` 通过 | 没把 `--executable-path` 指向 wrapper；MCP 默认会自己跑 `ldd` 校验它内置的那条路径，绕开它必须显式给 `--executable-path` |
-| 截图全黑 / 字体缺失 | 加 `pixi add fontconfig dejavu-fonts-ttf`，或在 wrapper 里 `export FONTCONFIG_PATH=$PIXI_LIB/../etc/fonts` |
+| `error while loading shared libraries: libXXX.so` | `LD_LIBRARY_PATH` 没生效（`direnv allow .envrc` 没跑？），或者该 lib 没在 pixi env 里。先确认 `echo $LD_LIBRARY_PATH` 包含 `.pixi/envs/default/lib`；若缺 lib 则 `pixi search 'libXXX*'` 找包名，再 `pixi add <pkg>` |
+| `Browser "chromium" is not installed` | 没跑 `npx playwright install chromium` |
+| MCP 报 `Missing system dependencies` | MCP 不经过 direnv，`LD_LIBRARY_PATH` 没生效。确认 `.mcp.json` 里 `command` 是 `pixi`、`args` 第一段是 `run --manifest-path …`，且 `pixi.toml` 含 `[activation.env] LD_LIBRARY_PATH = …` |
+| 截图全黑 / 字体缺失 | 加 `pixi add fontconfig dejavu-fonts-ttf`，或 `export FONTCONFIG_PATH=.pixi/envs/default/etc/fonts` |
 | 想换 Firefox / WebKit | 不可行：Playwright 用的是带 juggler/pwprotocol 补丁的 fork，conda-forge 上的 stock firefox 不兼容；Chromium 这条线就是官方 Chrome for Testing，没有 fork |
 
 ### 7.5 这套设计的取舍
 
-- **wrapper 而不是改 chrome RPATH**：`patchelf` 修改后 Playwright 重装会被覆盖；wrapper 一次写好，浏览器升级也不影响。
+- **统一入口：pixi `[activation.env]`**：唯一一处声明 `LD_LIBRARY_PATH`，无论是 direnv 激活的 shell、`pixi run` 还是 `pixi shell`，都会把 `.pixi/envs/default/lib` 注入子进程，无需额外 wrapper 脚本，跨机器一致。
 - **pixi 而不是 `apt-get download` 解 deb**：pixi 锁定版本、跨机可复现、`pixi.lock` 进 git；deb 那套没有版本管理也无法 CI。
 - **项目级而不是用户全局**：`.pixi/envs/default/` 在 `qcfd2026-site/`，删项目就全清干净；不污染 `$HOME` 或 `/usr`。
 

@@ -47,10 +47,11 @@ export function Hero() {
         <div className="max-w-3xl">
           <span className="eyebrow">
             <span className="size-1.5 rounded-full bg-primary animate-[pulse-glow_2.4s_ease-in-out_infinite]" />
-            QCFD · {conference.edition}
+            QCFD 2026
           </span>
 
           <h1 className="mt-6 text-4xl font-bold leading-[1.1] text-fg text-shadow-soft sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+            <span className="block">{conference.edition}</span>
             <span className="block">流体力学</span>
             <span className="block bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
               量子计算前沿研讨会
@@ -58,8 +59,8 @@ export function Hero() {
           </h1>
           <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-[0.16em] text-primary/80 sm:text-xs sm:tracking-[0.18em] md:text-sm">
             <span className="whitespace-nowrap">THE 3RD FRONTIER SYMPOSIUM</span>{' '}
-            <span className="whitespace-nowrap">ON QUANTUM COMPUTING</span>{' '}
-            <span className="whitespace-nowrap">IN FLUID MECHANICS</span>
+            <span className="whitespace-nowrap">ON QUANTUM COMPUTATIONAL</span>{' '}
+            <span className="whitespace-nowrap">FLUID DYNAMICS</span>
           </p>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
