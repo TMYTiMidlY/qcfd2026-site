@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { topics, type Topic } from '@/data/topics'
+import topicsBannerUrl from '@/assets/generated/topics-banner.webp'
 
 const iconMap: Record<Topic['icon'], typeof Atom> = {
   atom: Atom,
@@ -92,7 +93,7 @@ export function TopicGrid() {
       <div className="container-page">
         <figure className="relative mb-10 overflow-hidden rounded-3xl">
           <img
-            src="/generated/topics-banner.webp"
+            src={topicsBannerUrl}
             alt=""
             loading="lazy"
             decoding="async"

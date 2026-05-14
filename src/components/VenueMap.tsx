@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MapPin, Navigation, Building, ExternalLink } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
+import venueUrl from '@/assets/generated/venue-hefei.webp'
 import {
   detectPlatform,
   tryOpenInApp,
@@ -104,7 +105,7 @@ export function VenueMap() {
 
         <div className="mt-8 overflow-hidden rounded-2xl">
           <img
-            src="/generated/venue-hefei.webp"
+            src={venueUrl}
             alt=""
             loading="lazy"
             decoding="async"

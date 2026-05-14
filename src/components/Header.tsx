@@ -3,6 +3,7 @@ import { Menu, X, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
+import logoUrl from '@/assets/generated/qcfd-logo.webp'
 
 const navLinks = [
   { href: '#home', label: '首页' },
@@ -40,7 +41,7 @@ export function Header() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <a href="#home" className="flex items-center gap-2.5 group">
           <img
-            src="/generated/qcfd-logo.webp"
+            src={logoUrl}
             alt="QCFD"
             width={36}
             height={36}

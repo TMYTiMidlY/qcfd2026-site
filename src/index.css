@@ -203,7 +203,7 @@
   /* 桌面横屏装饰：生图生成的 2304×1008 横幅，图内 alpha 已保护
    * 左上标题区并在底部淡出；按宽度铺满、底部对齐，让主要元素留在
    * hero 下半部 / 右下区。 */
-  background-image: url(/generated/hero-decor-wide.webp);
+  background-image: url(./assets/generated/hero-decor-wide.webp);
   background-position: center bottom;
   background-size: 100% auto;
   background-repeat: no-repeat;
@@ -217,7 +217,7 @@
   .hero-decor-bg {
     /* 移动竖屏：专用 880×1760 生图，横向铺满避免右贴割裂；
      * 图内上半部 alpha 已压低，水波 / 电路主要落在 hero 下半部。 */
-    background-image: url(/generated/hero-decor-mobile.webp);
+    background-image: url(./assets/generated/hero-decor-mobile.webp);
     background-position: center bottom;
     background-size: 100% auto;
     opacity: 0.48;

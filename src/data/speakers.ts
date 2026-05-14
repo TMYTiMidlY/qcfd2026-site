@@ -9,6 +9,8 @@
  *  - speakers 顺序：详见 SOURCES.md §4（不按拼音排序）
  */
 
+import { avatar } from '@/assets/avatars'
+
 export type Speaker = {
   id: string
   name: string
@@ -29,7 +31,7 @@ export const guests: Speaker[] = [
     affiliation: '中国科学技术大学',
     bio: '中国科学技术大学教授、北京大学物理学院教授，我国量子光学与量子信息领域的开拓者之一。1965 年毕业于中国科学技术大学并留校任教。1997 年提出量子避错编码原理，1998 年提出量子概率克隆原理（“段-郭克隆机”），是国际公认的量子计算与量子信息理论先驱之一。曾获 2003、2020 年度国家自然科学二等奖。2003 年当选中国科学院院士，2009 年当选第三世界科学院院士。',
     isGuest: true,
-    photo: '/avatars/guo-guangcan.webp',
+    photo: avatar('guo-guangcan'),
   },
   {
     id: 'lu-xiyun',
@@ -38,7 +40,7 @@ export const guests: Speaker[] = [
     affiliation: '中国科学技术大学',
     bio: '中国科学技术大学教授、博士生导师，长江学者特聘教授，国家杰出青年科学基金获得者。研究方向涵盖旋涡动力学理论与方法、湍流模型与数值模拟、生物运动力学、界面流动及流动控制，在物体受力的主控旋涡理论、有限域涡量矩理论等方向取得系统性原创成果，为复杂流动机理认识与流动控制方法发展提供了理论支撑。曾任中国力学学会常务理事，现任《力学学报》主编。2019 年当选中国科学院院士。',
     isGuest: true,
-    photo: '/avatars/lu-xiyun.webp',
+    photo: avatar('lu-xiyun'),
   },
   {
     id: 'guo-guoping',
@@ -47,14 +49,14 @@ export const guests: Speaker[] = [
     affiliation: '中国科学技术大学 · 本源量子首席科学家',
     bio: '中国科学技术大学讲席教授、博士生导师，国家杰出青年科学基金获得者，第十四届全国人大代表，量子信息实验室副主任，本源量子首席科学家。长期从事半导体与超导量子计算研究，主导我国首台交付用户的超导量子计算机研发，任「本源悟空-180」研制团队总负责人，现任科技创新 2030「量子通信与量子计算机」重大项目负责人。',
     isGuest: true,
-    photo: '/avatars/guo-guoping.webp',
+    photo: avatar('guo-guoping'),
   },
 ]
 
 export const speakers: Speaker[] = [
   {
     id: 'hu-heng',
-    photo: '/avatars/hu-heng.webp',
+    photo: avatar('hu-heng'),
     name: '胡衡',
     title: '教授',
     affiliation: '宁夏大学',
@@ -65,7 +67,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'xiao-dunhui',
-    photo: '/avatars/xiao-dunhui.webp',
+    photo: avatar('xiao-dunhui'),
     name: '肖敦辉',
     title: '教授',
     affiliation: '同济大学 数学科学学院',
@@ -76,7 +78,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'niu-xiaodong',
-    photo: '/avatars/niu-xiaodong.webp',
+    photo: avatar('niu-xiaodong'),
     name: '牛小东',
     title: '教授',
     affiliation: '汕头大学 工学院机械工程系',
@@ -87,7 +89,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'wu-feng',
-    photo: '/avatars/wu-feng.webp',
+    photo: avatar('wu-feng'),
     name: '吴锋',
     title: '教授',
     affiliation: '大连理工大学',
@@ -98,7 +100,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'zhang-lei',
-    photo: '/avatars/zhang-lei.webp',
+    photo: avatar('zhang-lei'),
     name: '张镭',
     title: '教授',
     affiliation: '上海交通大学',
@@ -109,7 +111,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'tang-hui',
-    photo: '/avatars/tang-hui.webp',
+    photo: avatar('tang-hui'),
     name: '唐辉',
     title: '教授 · 副主任（科研）',
     affiliation: '香港理工大学 机械工程系',
@@ -120,7 +122,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'liu-jinpeng',
-    photo: '/avatars/liu-jinpeng.webp',
+    photo: avatar('liu-jinpeng'),
     name: '刘锦鹏',
     title: '助理教授',
     affiliation: '清华大学丘成桐数学科学中心',
@@ -131,7 +133,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'an-dong',
-    photo: '/avatars/an-dong.webp',
+    photo: avatar('an-dong'),
     name: '安冬',
     title: '助理教授',
     affiliation: '北京大学 北京国际数学研究中心',
@@ -142,7 +144,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'xiong-shiying',
-    photo: '/avatars/xiong-shiying.webp',
+    photo: avatar('xiong-shiying'),
     name: '熊诗颖',
     title: '研究员',
     affiliation: '浙江大学 航空航天学院',
@@ -153,7 +155,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'xu-liang',
-    photo: '/avatars/xu-liang.webp',
+    photo: avatar('xu-liang'),
     name: '许亮',
     title: '研究员',
     affiliation: '中国航天空气动力技术研究院',
@@ -164,7 +166,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'chen-zhaoyun',
-    photo: '/avatars/chen-zhaoyun.webp',
+    photo: avatar('chen-zhaoyun'),
     name: '陈昭昀',
     title: '研究员',
     affiliation: '合肥综合性国家科学中心人工智能研究院',
@@ -175,7 +177,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'shi-zhiquan',
-    photo: '/avatars/shi-zhiquan.webp',
+    photo: avatar('shi-zhiquan'),
     name: '石志全',
     title: '量子算法总监',
     affiliation: '中科酷原科技（武汉）有限公司',
@@ -186,7 +188,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'dou-menghan',
-    photo: '/avatars/dou-menghan.webp',
+    photo: avatar('dou-menghan'),
     name: '窦猛汉',
     title: '高级工程师',
     affiliation: '本源量子计算科技（合肥）股份有限公司',
@@ -197,7 +199,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'lu-zhen',
-    photo: '/avatars/lu-zhen.webp',
+    photo: avatar('lu-zhen'),
     name: '卢臻',
     title: '助理研究员',
     affiliation: '北京大学 力学与工程科学学院',
@@ -208,7 +210,7 @@ export const speakers: Speaker[] = [
   },
 {
     id: 'meng-zhaoyuan',
-    photo: '/avatars/meng-zhaoyuan.webp',
+    photo: avatar('meng-zhaoyuan'),
     name: '孟昭远',
     title: '特别研究助理',
     affiliation: '中国科学院力学研究所',

@@ -19,6 +19,7 @@ import {
   type TrafficInfo,
   type TrafficSubMode,
 } from '@/data/traffic'
+import trafficMapUrl from '@/assets/generated/traffic-map.webp'
 import {
   detectPlatform,
   tryOpenInApp,
@@ -150,7 +151,7 @@ export function Traffic() {
 
         <figure className="mx-auto mt-10 max-w-4xl rounded-2xl bg-bg-alt/40 p-1 ring-1 ring-black/[0.04]">
           <img
-            src="/generated/traffic-map.webp"
+            src={trafficMapUrl}
             alt="合肥三大交通枢纽（新桥机场、合肥南站、合肥站）抵达翡翠湖迎宾馆的相对位置示意"
             loading="lazy"
             decoding="async"

@@ -1,5 +1,6 @@
 import { Mail, Phone, Globe, Receipt } from 'lucide-react'
 import { conference } from '@/data/conference'
+import logoUrl from '@/assets/generated/qcfd-logo.webp'
 
 export function Footer() {
   return (
@@ -8,7 +9,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr]">
           <div>
             <img
-              src="/generated/qcfd-logo.webp"
+              src={logoUrl}
               alt="QCFD"
               width={56}
               height={56}
