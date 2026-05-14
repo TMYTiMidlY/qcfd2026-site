@@ -51,26 +51,32 @@ export function Footer() {
               会议联系人
             </h4>
             <ul className="mt-4 space-y-4 text-sm text-fg-soft">
-              {conference.contacts.map((c) => (
-                <li key={c.email}>
-                  <p className="font-medium text-fg">{c.name}</p>
-                  <a
-                    href={`tel:${c.phone}`}
-                    className="mt-1 inline-flex items-center gap-2 text-xs text-fg-muted hover:text-primary"
-                  >
-                    <Phone className="size-3" />
-                    {c.phone}
-                  </a>
-                  <br />
-                  <a
-                    href={`mailto:${c.email}`}
-                    className="mt-1 inline-flex items-center gap-2 text-xs text-fg-muted hover:text-primary"
-                  >
-                    <Mail className="size-3" />
-                    {c.email}
-                  </a>
-                </li>
-              ))}
+              {conference.contacts.map((c) => {
+                const phone = c.phoneParts.join('')
+                return (
+                  <li key={c.email}>
+                    <p className="font-medium text-fg">{c.name}</p>
+                    <a
+                      href={`tel:${phone}`}
+                      aria-label={`电话 ${phone}`}
+                      className="mt-1 inline-flex items-center gap-2 text-xs text-fg-muted hover:text-primary"
+                    >
+                      <Phone className="size-3" aria-hidden />
+                      {c.phoneParts.map((p, i) => (
+                        <span key={i}>{p}</span>
+                      ))}
+                    </a>
+                    <br />
+                    <a
+                      href={`mailto:${c.email}`}
+                      className="mt-1 inline-flex items-center gap-2 text-xs text-fg-muted hover:text-primary"
+                    >
+                      <Mail className="size-3" />
+                      {c.email}
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
           </div>
 

@@ -603,8 +603,8 @@
 
 | 联系人 | 电话 | 邮箱 | 出处 |
 |---|---|---|---|
-| 陈昭昀 | ***REDACTED-PHONE*** | chenzhaoyun@iai.ustc.edu.cn | 🟢 邀请报告完整版/会议手册素材 0512.docx 第一节「联系人」 |
-| 王俊超 | ***REDACTED-PHONE*** | wangjunchao11@126.com | 🟢 同上 |
+| 陈昭昀 | 见 `.envrc`（运行时注入，公开仓库零暴露） | chenzhaoyun@iai.ustc.edu.cn | 🟢 邀请报告完整版/会议手册素材 0512.docx 第一节「联系人」 |
+| 王俊超 | 见 `.envrc`（同上） | wangjunchao11@126.com | 🟢 同上 |
 
 ---
 
@@ -624,8 +624,8 @@
 > 会议地点：
 >   合肥翡翠湖迎宾馆 3 号楼（安徽省合肥市经济技术开发区容成路 1 号）
 > 联系人
->   陈昭昀 电话：***REDACTED-PHONE*** 邮箱：chenzhaoyun@iai.ustc.edu.cn
->   王俊超 电话：***REDACTED-PHONE*** 邮箱：wangjunchao11@126.com
+>   陈昭昀 电话：（脱敏；公开仓库不含原号码，详见 .envrc / VITE_PHONE_*） 邮箱：chenzhaoyun@iai.ustc.edu.cn
+>   王俊超 电话：（同上脱敏） 邮箱：wangjunchao11@126.com
 > 会议用餐
 >   5月22日晚餐：翡翠湖迎宾馆
 >   5月23日午餐：翡翠湖迎宾馆

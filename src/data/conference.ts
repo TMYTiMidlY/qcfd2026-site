@@ -34,12 +34,12 @@ export const conference = {
   contacts: [
     {
       name: '陈昭昀',
-      phone: '***REDACTED-PHONE***',
+      phoneParts: (import.meta.env.VITE_PHONE_ZY ?? '').split(','),
       email: 'chenzhaoyun@iai.ustc.edu.cn',
     },
     {
       name: '王俊超',
-      phone: '***REDACTED-PHONE***',
+      phoneParts: (import.meta.env.VITE_PHONE_WJC ?? '').split(','),
       email: 'wangjunchao11@126.com',
     },
   ],
