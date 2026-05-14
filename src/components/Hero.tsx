@@ -57,10 +57,9 @@ export function Hero() {
             </span>
           </h1>
           <p className="mt-4 text-[0.7rem] font-medium uppercase tracking-[0.16em] text-primary/80 sm:text-xs sm:tracking-[0.18em] md:text-sm">
-            <span className="whitespace-nowrap">The 3rd QCFD</span>
-            <span className="mx-1.5 text-primary/60">·</span>
-            <span className="whitespace-nowrap">Quantum Computing</span>{' '}
-            <span className="whitespace-nowrap">for Fluid Dynamics</span>
+            <span className="whitespace-nowrap">THE 3RD FRONTIER SYMPOSIUM</span>{' '}
+            <span className="whitespace-nowrap">ON QUANTUM COMPUTING</span>{' '}
+            <span className="whitespace-nowrap">IN FLUID MECHANICS</span>
           </p>
 
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
