@@ -1,7 +1,14 @@
 import { useState } from 'react'
-import { Calendar, Clock, Mic, Coffee, Info, MapPin } from 'lucide-react'
+import { Calendar, Clock, Mic, Coffee, Info, MapPin, ClipboardCheck, Utensils, Bus, Building2, Cpu } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { schedule, type ScheduleItem } from '@/data/schedule'
+
+const VISIT_ICONS: Record<string, LucideIcon> = {
+  bus: Bus,
+  'building-2': Building2,
+  cpu: Cpu,
+}
 
 type Block =
   | { kind: 'session'; chair: string; items: ScheduleItem[] }
@@ -121,10 +128,14 @@ export function Schedule() {
                 {/* 时间轴线 */}
                 <div className="absolute left-[11px] top-2 bottom-2 w-px bg-gradient-to-b from-accent via-primary to-primary/20 sm:left-[15px]" aria-hidden />
 
-                {day.items.map((item, i) => (
+                {day.items.map((item, i) => {
+                  const Icon = (item.icon && VISIT_ICONS[item.icon]) || MapPin
+                  return (
                   <div key={i} className="relative pb-8 last:pb-0">
-                    <div className="absolute -left-8 top-1 grid size-6 place-items-center rounded-full bg-accent/15 ring-2 ring-accent/30 sm:-left-10 sm:size-8">
-                      <MapPin className="size-3 text-accent sm:size-3.5" />
+                    <div className="absolute -left-8 top-1 z-10 grid size-6 place-items-center rounded-full bg-bg-soft ring-2 ring-accent/30 sm:-left-10 sm:size-8">
+                      <span className="grid size-full place-items-center rounded-full bg-accent/15">
+                        <Icon className="size-3 text-accent sm:size-3.5" />
+                      </span>
                     </div>
                     <div>
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent">
@@ -137,7 +148,8 @@ export function Schedule() {
                       ) : null}
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
@@ -172,7 +184,13 @@ export function Schedule() {
                     key={bIdx}
                     className="flex items-center gap-3 bg-bg-alt/50 px-5 py-4 sm:px-7"
                   >
-                    <Coffee className="size-4 text-fg-muted" />
+                    {block.item.kind === 'checkin' ? (
+                      <ClipboardCheck className="size-4 text-primary" />
+                    ) : block.item.title.includes('餐') ? (
+                      <Utensils className="size-4 text-fg-muted" />
+                    ) : (
+                      <Coffee className="size-4 text-fg-muted" />
+                    )}
                     <span className="inline-flex w-32 shrink-0 items-center gap-2 text-sm font-medium text-fg-muted">
                       <Clock className="size-3.5" />
                       {block.item.time ?? '—'}

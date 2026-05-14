@@ -36,8 +36,10 @@ export type ScheduleItem = {
   speaker?: string
   /** 标记本条开始一个新的主持时段，chair 为该时段主持人姓名 */
   chair?: string
-  /** 条目类别：'visit' 参观活动，独立于茶歇/报告的视觉样式 */
-  kind?: 'visit'
+  /** 条目类别：'visit' 参观活动；'checkin' 报到/后勤 */
+  kind?: 'visit' | 'checkin'
+  /** 参观时间线节点图标（lucide 图标名） */
+  icon?: 'bus' | 'building-2' | 'cpu'
 }
 
 export type ScheduleDay = {
@@ -59,7 +61,7 @@ export const schedule: ScheduleDay[] = [
     shortWeekday: '周五',
     label: '会议报到',
     items: [
-      { time: '14:00–21:00', title: '会议报到', note: '合肥翡翠湖迎宾馆 3 号楼' },
+      { time: '14:00–21:00', title: '会议报到', note: '合肥翡翠湖迎宾馆 3 号楼', kind: 'checkin' },
       { time: '17:30–20:00', title: '晚餐', note: '翡翠湖迎宾馆' },
     ],
   },
@@ -165,18 +167,20 @@ export const schedule: ScheduleDay[] = [
     shortWeekday: '周日',
     label: '参观与离会',
     items: [
-      { time: '09:30–10:00', title: '乘车前往巢湖明月', note: '合肥先进计算中心', kind: 'visit' },
+      { time: '09:30–10:00', title: '乘车前往巢湖明月', note: '合肥先进计算中心', kind: 'visit', icon: 'bus' },
       {
         time: '10:00–10:30',
         title: '合肥先进计算中心展厅参观',
         note: '了解巢湖明月与量子计算建设背景',
         kind: 'visit',
+        icon: 'building-2',
       },
       {
         time: '10:30–10:40',
         title: '巢湖明月主机参观',
         note: '近距离感受浸没式液冷',
         kind: 'visit',
+        icon: 'cpu',
       },
     ],
     description:

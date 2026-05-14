@@ -50,9 +50,10 @@ export function Hero() {
             QCFD 2026
           </span>
 
-          <h1 className="mt-6 text-4xl font-bold leading-[1.1] text-fg text-shadow-soft sm:text-5xl md:text-6xl lg:text-[4.25rem]">
-            <span className="block">{conference.edition}</span>
-            <span className="block">流体力学</span>
+          <h1 className="mt-6 text-4xl font-bold leading-[1.1] text-shadow-soft sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+            <span className="block text-fg">
+              {conference.edition}流体力学
+            </span>
             <span className="block bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
               量子计算前沿研讨会
             </span>
