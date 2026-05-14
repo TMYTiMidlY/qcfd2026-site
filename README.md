@@ -94,8 +94,6 @@ qcfd2026-site/
 ├── vite.config.ts                  # react + tailwindcss + @ alias
 ├── tsconfig.{json,app.json,node.json}
 ├── index.html                      # 引入 Inter + Noto Sans SC Google Fonts
-├── systemd/
-│   └── qcfd2026-site.service       # dev server 常驻 user unit（见 §四）
 ├── _sources/                       # 【.gitignore】会议方原始素材（docx/xlsx/doc）
 │   ├── 邀请报告完整版/             #   主源：会议手册素材  0512.docx + 会议日程v2.xlsx
 │   │   ├── 会议手册素材  0512.docx #   + 14 份「报告人信息模板」原 doc
@@ -203,11 +201,29 @@ pixi run bunx --bun shadcn@latest add <component> -y
 - 多个 agent 会话并存时，一份 service 即可，不会冒出 N 个 8888 抢端口
 - 重启 / 注销不丢
 
-一次性安装：
+一次性安装（把下面 unit 模板里 `<YOUR_REPO_PATH>` / `<YOUR_PIXI_BIN>` 换成你机器上的实际路径）：
 
 ```bash
-mkdir -p ~/.config/systemd/user
-cp systemd/qcfd2026-site.service ~/.config/systemd/user/
+cat > ~/.config/systemd/user/qcfd2026-site.service <<'EOF'
+[Unit]
+Description=QCFD 2026 site (vite dev on :8888)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=<YOUR_REPO_PATH>
+ExecStart=<YOUR_PIXI_BIN> run bun run dev
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qcfd2026-site
+
+[Install]
+WantedBy=default.target
+EOF
+
 systemctl --user daemon-reload
 systemctl --user enable --now qcfd2026-site.service
 systemctl --user status qcfd2026-site.service     # active (running)
@@ -215,7 +231,7 @@ journalctl --user -u qcfd2026-site.service -f     # 实时日志
 loginctl enable-linger $USER                      # 注销后也保持运行
 ```
 
-unit 文件已 commit 在 `systemd/qcfd2026-site.service`，仅 7 行 ExecStart（`pixi run bun run dev`）。绝对路径里 `WorkingDirectory=<YOUR_REPO_PATH>` 是本机，**克隆到别处后改成你机器上 master worktree 的实际路径**。
+仅 7 行 `ExecStart`（`pixi run bun run dev`）。`WorkingDirectory` 是本机绝对路径，**clone 到别处后改成你机器上 master worktree 的实际路径**；如果 `pixi` 已在 `$PATH` 里，`ExecStart` 也可以写成 `pixi run bun run dev` 不用绝对路径。
 
 > ⚠️ **唯一例外是 git worktree**：worktree 的 cwd 不等于 master 的 `WorkingDirectory`，systemd service 看不到 worktree 的代码。在 worktree 里临时改东西，要么 `bun run dev -- --port 9100` 自起一个独立端口（用完关掉），要么把改动 merge / cherry-pick 回 master，让现成的 8888 service 接管。**不要在 worktree 上偷偷起第二个 8888**，HMR 抢端口、agent 看到老分支结果、还自己骗自己"看到了"。
 >
