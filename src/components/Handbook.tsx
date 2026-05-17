@@ -17,9 +17,10 @@ const items: {
   },
   {
     title: '会议通知',
-    desc: '中国力学学会用印的正式通知，可用于参会代表所在单位的差旅、注册费报销凭证',
-    available: false,
+    desc: '由会议承办方盖章的正式通知，含组织机构、日程地点、注册费与联系人，可作为参会单位的差旅 / 注册费报销附件',
+    available: true,
     kind: 'pdf',
+    url: '/qcfd2026-notice-stamped.pdf',
   },
   {
     title: '力学学会公众号最新通知',
@@ -31,7 +32,7 @@ const items: {
 ]
 
 const buttonLabel: Record<ItemKind, { label: string; Icon: typeof Download }> = {
-  pdf: { label: '下载 PDF', Icon: Download },
+  pdf: { label: '打开 PDF', Icon: ExternalLink },
   wechat: { label: '前往公众号', Icon: ExternalLink },
   mixed: { label: '即将发布', Icon: Download },
 }
