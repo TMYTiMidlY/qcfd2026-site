@@ -9,6 +9,7 @@ const navLinks = [
   { href: '#home', label: '首页' },
   { href: '#chair', label: '大会主席' },
   { href: '#guests', label: '特邀嘉宾' },
+  { href: '#exhibitors', label: '参展单位' },
   { href: '#topics', label: '议题方向' },
   { href: '#speakers', label: '特邀报告' },
   { href: '#schedule', label: '日程' },

@@ -2,6 +2,7 @@ import { Header } from '@/components/Header'
 import { Hero } from '@/components/Hero'
 import { ChairIntro } from '@/components/ChairIntro'
 import { GuestSection } from '@/components/GuestSection'
+import { Exhibitors } from '@/components/Exhibitors'
 import { TopicGrid } from '@/components/TopicGrid'
 import { SpeakerGrid } from '@/components/SpeakerCard'
 import { Schedule } from '@/components/Schedule'
@@ -21,6 +22,7 @@ export default function App() {
         <Hero />
         <ChairIntro />
         <GuestSection />
+        <Exhibitors />
         <TopicGrid />
         <SpeakerGrid />
         <Schedule />
