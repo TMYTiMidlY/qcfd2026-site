@@ -12,8 +12,9 @@ const items: {
   {
     title: '会议手册',
     desc: '议程、嘉宾介绍、报告摘要、场地导览的完整 PDF 版本',
-    available: false,
+    available: true,
     kind: 'pdf',
+    url: '/qcfd2026-handbook.pdf',
   },
   {
     title: '会议通知',

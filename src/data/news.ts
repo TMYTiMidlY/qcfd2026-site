@@ -50,6 +50,34 @@ export type NewsItem = {
 
 export const news: NewsItem[] = [
   {
+    id: 'handbook-and-notice-published-2026',
+    date: '2026-05-20',
+    title: '会议手册与会议通知（盖章）已发布',
+    excerpt:
+      '会议手册（议程、嘉宾介绍、报告摘要、场地导览）与盖章版会议通知（含组织机构、日程地点、注册费与联系人）均已上线。点击下方按钮前往「资料下载」区域查阅。',
+    body: [
+      '会议手册与盖章版会议通知两份正式材料均已上线，可在本站「资料下载」区域直接打开 PDF。',
+      {
+        kind: 'callout',
+        icon: 'info',
+        tone: 'primary',
+        title: '查看会议手册',
+        text: '议程、嘉宾介绍、报告摘要、场地导览均收录在内。会议前后随时可下载，方便提前预习与现场对照。',
+      },
+      {
+        kind: 'callout',
+        icon: 'check',
+        tone: 'accent',
+        title: '需要报销 / 差旅附件',
+        text: '由会议承办方盖章的正式通知含组织机构、日程地点、注册费与联系人，可作为参会单位的差旅 / 注册费报销附件下载。',
+      },
+    ],
+    actionUrl: '#handbook',
+    actionLabel: '前往「资料下载」',
+    tag: '资料发布',
+    pinned: true,
+  },
+  {
     id: 'hanyuan2-quota-2026',
     date: '2026-05-18',
     title: '中科酷原汉原 2 号量子计算机 1 小时机时',

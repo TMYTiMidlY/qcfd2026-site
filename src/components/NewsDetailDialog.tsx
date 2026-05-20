@@ -129,8 +129,9 @@ export function NewsDetailDialog({ item, onOpenChange }: Props) {
                 <div className="pt-1">
                   <a
                     href={item.actionUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    {...(item.actionUrl.startsWith('#')
+                      ? { onClick: () => onOpenChange(false) }
+                      : { target: '_blank', rel: 'noreferrer' })}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
                   >
                     {item.actionLabel ?? '前往'}
