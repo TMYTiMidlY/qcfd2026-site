@@ -303,6 +303,30 @@ loginctl enable-linger $USER                      # 注销后也保持运行
 
 `bun run build` 输出 `dist/`，是**纯静态资源**（HTML + 哈希化的 JS/CSS + 图片字体），任何静态托管都能跑。
 
+### 构建前：确认敏感 env vars 已注入
+
+会议联系人电话号码通过 `VITE_PHONE_*` 环境变量在构建时注入（反爬：拆段存储，前端拼接渲染，源码和产物里都不出现连续 11 位数字）。**这些变量定义在 `.envrc`（不进库）**，Vite 构建时读取 `import.meta.env.VITE_*` 并内联到 JS bundle。
+
+**如果构建时 shell 里没有这些变量，产物里电话会变成空字符串，线上只显示邮箱。**
+
+构建前验证：
+
+```bash
+# 确认 direnv 已加载（两个都应有值）
+echo "ZY=$VITE_PHONE_ZY  WJC=$VITE_PHONE_WJC"
+```
+
+构建后验证：
+
+```bash
+# 产物里应能看到拆段后的号码，而非空字符串
+grep -oP 'phoneParts.{0,50}' dist/assets/*.js
+# ✅ 正确：phoneParts:"180,1993,9811".split(",")
+# ❌ 错误：phoneParts:"".split(",")
+```
+
+> **踩坑记录（2026-05-26）**：曾因构建时 direnv 未加载导致线上电话消失，只剩邮箱。原因是在非 direnv shell（如 CI / 裸 ssh）里跑了 `bun run build`，`VITE_PHONE_*` 为空被 Vite 内联为 `""`。
+
 ### 维护者约定：用 env vars 表达「当前部署方案」
 
 不同会议复用本仓库时部署目标会变；用三个 env vars 解释清楚比每次 ad-hoc 沟通靠谱：
