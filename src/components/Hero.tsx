@@ -3,25 +3,32 @@ import { ArrowDown, CalendarDays, MapPin, ExternalLink } from 'lucide-react'
 import { conference } from '@/data/conference'
 import { Button } from '@/components/ui/button'
 
-function useCountdown(target: string) {
+function useCountdown(target: string, endTarget: string) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60_000)
     return () => clearInterval(t)
   }, [])
-  const diff = Math.max(0, new Date(target).getTime() - now)
+  const startMs = new Date(target).getTime()
+  const endMs = new Date(endTarget).getTime()
+  const diff = Math.max(0, startMs - now)
   const day = 24 * 60 * 60 * 1000
   const days = Math.floor(diff / day)
   const hours = Math.floor((diff % day) / (60 * 60 * 1000))
-  return { days, hours, isPast: diff === 0 }
+  const phase: 'before' | 'during' | 'ended' =
+    now < startMs ? 'before' : now < endMs ? 'during' : 'ended'
+  return { days, hours, phase }
 }
 
 // 倒计时锚定 5/23 08:30 学术会议开场（用户 2026-05-11 15:53 在会话中确认；
 // docx 第二节仅写「5月23日，学术会议」未明时段，详见 SOURCES.md §1）
 const COUNTDOWN_TARGET = '2026-05-23T08:30:00+08:00'
+// 会议 5/22-24；5/24 末项参观结束于 10:40，下午为离会。
+// 12:00 起切换到「会议已闭幕」提示。
+const CONFERENCE_END = '2026-05-24T12:00:00+08:00'
 
 export function Hero() {
-  const { days, hours, isPast } = useCountdown(COUNTDOWN_TARGET)
+  const { days, hours, phase } = useCountdown(COUNTDOWN_TARGET, CONFERENCE_END)
 
   return (
     <section
@@ -108,8 +115,12 @@ export function Hero() {
           </div>
 
           <div className="mt-10 inline-flex max-w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-black/5 bg-white/70 px-5 py-3 shadow-sm backdrop-blur max-sm:mt-8 max-sm:gap-x-2 max-sm:border-transparent max-sm:bg-white/40 max-sm:px-3 max-sm:py-2 max-sm:shadow-none max-sm:text-sm">
-            {isPast ? (
+            {phase === 'during' ? (
               <span className="text-sm text-fg">会议正在进行，欢迎现场交流</span>
+            ) : phase === 'ended' ? (
+              <span className="text-sm text-fg">
+                会议已圆满闭幕，期待 2027 再会
+              </span>
             ) : (
               <>
                 <span className="text-xs uppercase tracking-[0.18em] text-fg-muted">
