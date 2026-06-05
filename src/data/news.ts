@@ -50,6 +50,15 @@ export type NewsItem = {
 
 export const news: NewsItem[] = [
   {
+    id: 'post-recap-2026',
+    date: '2026-05-28',
+    title: '第三届流体力学量子计算前沿研讨会在合肥举办',
+    excerpt:
+      '5 月 22-24 日，第三届流体力学量子计算前沿研讨会在合肥翡翠湖迎宾馆顺利召开。本届会议由中国力学学会流体力学专业委员会主办、合肥综合性国家科学中心人工智能研究院承办，邀请郭光灿院士、陆夕云院士、郭国平教授三位特邀嘉宾出席，全国 96 位学者参会，15 位专家作专题学术报告。中国力学学会公众号发布会议官方报道。',
+    url: 'https://mp.weixin.qq.com/s/BKLccbVYuXengdscJjEXuw',
+    tag: '会议报道',
+  },
+  {
     id: 'handbook-and-notice-published-2026',
     date: '2026-05-20',
     title: '会议手册与会议通知（盖章）已发布',
@@ -199,7 +208,7 @@ export const news: NewsItem[] = [
   {
     id: 'recap-2025',
     date: '2025-05',
-    title: '回顾：第二届流体力学量子计算前沿研讨会（杭州）',
+    title: '第二届流体力学量子计算前沿研讨会（杭州）',
     excerpt:
       '2025 年 5 月 9-10 日在杭州召开，由浙大航空航天学院与北大工学院联合承办，13 位专家作专题报告，全国 40 余家机构 90 余位学者参会。',
     url: 'https://mp.weixin.qq.com/s/fTrd2U3MuyU0sl_NaYdoZA',
@@ -208,7 +217,7 @@ export const news: NewsItem[] = [
   {
     id: 'recap-2024',
     date: '2024-07',
-    title: '回顾：首届流体力学量子计算前沿研讨会（北京）',
+    title: '首届流体力学量子计算前沿研讨会（北京）',
     excerpt:
       '2024 年 7 月 12-13 日在北京召开，国内首次专题研讨会，由北大工学院与浙大航空航天学院承办，12 位专家作专题报告，80 余位学者参会。',
     url: 'https://mp.weixin.qq.com/s/eX62OHMfmysrt0C-r2pr9w',
